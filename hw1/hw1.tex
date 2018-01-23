@@ -1,15 +1,16 @@
 \documentclass[12pt]{article}
 \usepackage{fullpage,enumitem,amsmath,amssymb,graphicx}
+\usepackage{listings}
 
 \begin{document}
 
 \begin{center}
-{\Large CS 228 Winter 2014/2015 Homework [number]}
+{\Large CS 228 Winter 2018 Homework 1}
 
 \begin{tabular}{rl}
-SUNet ID: & [your SUNet ID] \\
-Name: & [your first and last name] \\
-Collaborators: & [list all the people you worked with]
+SUNet ID: & 05794739 \\
+Name: & Luis Perez \\
+Collaborators: &
 \end{tabular}
 \end{center}
 
@@ -17,17 +18,132 @@ By turning in this assignment, I agree by the Stanford honor code and declare
 that all of this is my own work.
 
 \section*{Problem 1}
+It is good news that the disease is rare because, despite the high accuracy of the test, the rarity of the disease actually makes it quite unlikely that you have the disease (even after testing positive).
 
-\begin{enumerate}[label=(\alph*)]
-  \item (your solution)
-  \item (your solution)
-\end{enumerate}
+To see this, let $T$ be the even that the test is positive. Let $D$ be the event that you have the disease. Then we're interested in calculating $P(D \mid T)$, which by Bayes' rule, we can write as:
+\begin{align*}
+	P(D \mid T) &= \frac{P(T \mid D)P(D)}{P(T)} \\
+	&= \frac{P(T \mid D)P(D)}{P(T \mid D)P(D) + P(T \mid \bar{D})P(\bar{D})} \\
+	&= \frac{(0.99)(0.0001)}{(0.99)(0.0001) + (0.01)(0.9999)} \\
+	&= \frac{1}{102} \approx 0.98\%
+\end{align*}
+Therefore, due to the rarity of the disease, even after testing positive, there's still slightly less than a $1\%$ chance that you actually have the disease (despite the ``high'' accuracy of the test).
+
+\pagebreak
 
 \section*{Problem 2}
-
-\begin{enumerate}[label=(\alph*)]
-  \item (your solution)
-  \item (your solution)
+We can use the Markov assumption directly to help us solve this problem. We first note that the problem consists of finding the maximum values of a joint distribution of $n$ random variables which all take values in the set $\mathcal{S}$. We can break the problem into the following:
+\begin{align*}
+\max_{x_1, \cdots, x_n \in \mathcal{S}^n} P(x_n, \cdots, x_1) &= \max_{x_1, \cdots, x_n \in \mathcal{S}^n} P(x_n \mid x_{n-1}, \cdots, x_1)P(x_{n_1}, \cdots, x_1) \tag{definition of joint distribution} \\
+&=  \max_{x_1, \cdots, x_n \in \mathcal{S}^n} P(x_n \mid x_{n-1})P(x_{n_1}, \cdots, x_1) \tag{Markov assumption} \\
+&=\max_{x_{n-1}, x_n \in \mathcal{S}^2} P(x_n \mid x_{n-1}) \max_{x_1, \cdots, x_{n-1} \in \mathcal{S}^{n-1}}P(x_{n-1}, \cdots, x_1) 
+\end{align*}
+From the above, we can immediately note that the problem consists of two simple steps:
+\begin{enumerate}
+\item Find the maximum values over the conditional distributions $P(X_i = u \mid X_{i-1} = v)$
+\item Solve an instance of the same problem but only over $i - 1$ variables.
 \end{enumerate}
+We further note that in the base case where $i = 1$, we need only take the maximum over the values of the distribution $P(X_1 = x)$.
+
+The above gives rise to the following algorithm, where $X1 \in [0,1]^m$ represents the distribution of $P(X_1 = v)$ and $Xi \in [0,1]^{m \times m}$ is the $m \times m$ matrix representing the conditional distributions $P(X_i = u \mid X_{i-1} = v)$.
+\begin{lstlisting}[language=Python]
+def Procedure(X1, X2, ..., Xn):
+	res = max(X1)
+	for i = 2 in 2...n:
+		res *= max(Xn)
+	return res
+\end{lstlisting}
+This very directly translates into a running time of $O(m + m^2(n-1)) = O(m^2n)$ since each iteration of the loop would take $O(m^2)$ to find the max over an $m \times m$ matrix.
+
+\pagebreak
+\section*{Problem 3}
+It is simple enough to come up with a counter example. Consider the directed cyclic graph given by $G = (V,E)$ where $V = \{X_1, X_2, \cdots, X_n \}$ and $E = \{(X_1,X_2), (X_2,X_3),\cdots (X_{n-1}, X_n), (X_n,X_1) \}$. Now consider the conditional probability distributions which are fully determined by the value of the parent. Formally, these are defined as:
+$$
+f_v(x_v \mid x_{pa}(v)) = \begin{cases} 
+    0 & x_v \neq x_{pa}(v) \\
+    1 & x_v = x_{pa}(v)
+ \end{cases}
+$$
+which are perfectly valid conditional distributions.
+
+However, now consider summing over all values of the joint distribution.
+\begin{align*}
+\sum_{x_1, \cdots, x_n \in Val(X_1) \times \cdots \times Val(X_n) } f(x_1, \cdots, x_n) 
+&= \sum_{x_1, \cdots, x_n \in Val(X_1) \times \cdots \times Val(X_n) } \prod_{v \in V} f_v(x_v \mid x_{pa}(v)) \\
+&= \sum_{x_1 = x_2 = \cdots = x_n} 1 \tag{the conditional probability is $1$ only when the values are equal} \\
+\end{align*}
+For the above, we either have that the sum sums to $0$ (if $\bigcap_{v \in V} Val(X_v) = \emptyset$), the sum sums to $1$ (if $\left|\bigcap_{v \in V} Val(X_v) \right| = 1$), or the sum is larger than $1$ (all other cases). Note that in the latter case (which is simple enough to construct), we have an improper joint distribution. Therefore Bayesian networks must be defined as acyclic.
+
+\pagebreak
+\section*{Problem 4}
+\begin{itemize}
+  \item We wish to calculate $\Pr(\alpha \mid \beta, \gamma)$ and we have no conditional independence information. In this case, knowing:
+  \begin{enumerate}[label=\arabic*.]
+  	\item $\Pr(\beta, \gamma), \Pr(\alpha), \Pr(\beta \mid \alpha)$, and $\Pr(\gamma \mid \alpha)$ is not sufficient to calculate what we want since we cannot obtain the joint conditional distribution of $\beta, \gamma$ given $\alpha$ with only the given distributions. Without any conditional independence information, we have $\Pr(\beta, \gamma \mid \alpha) = \Pr(\beta \mid \gamma, \alpha)P(\gamma \mid \alpha)$.
+  	\item $\Pr(\beta, \gamma), \Pr(\alpha)$ and $\Pr(\beta, \gamma|\alpha)$ are sufficient. We can directly calculate what we want using Bayes' Rule:
+  	$$
+  		\Pr(\alpha \mid \beta, \gamma) = \frac{\Pr(\beta, \gamma \mid \alpha)\Pr(\alpha)}{\Pr(\beta, \gamma)}
+  	$$
+  	\item $\Pr(\beta \mid \alpha), \Pr(\gamma \mid \alpha)$, and $\Pr(\alpha)$ is not sufficient to calculate what we want since we cannot obtain the joint conditional distribution of $\beta, \gamma$ given $\alpha$ with only the given distributions (see 1).
+ 	\end{enumerate}
+  \item We now suppose we know that $\beta$ and $\gamma$ are conditionally independent given $\alpha$. We note that all sets can now be directly computed as follows, since we know that $\Pr(\beta, \gamma \mid \alpha) = \Pr(\beta \mid\alpha)\Pr(\gamma \mid \alpha)$.
+  \begin{enumerate}[label=\arabic*.]
+  	\item $\Pr(\beta, \gamma), \Pr(\alpha), \Pr(\beta \mid \alpha)$, and $\Pr(\gamma \mid \alpha)$ is sufficient.
+  	\begin{align*}
+			\Pr(\alpha \mid \beta, \gamma) &= \frac{\Pr(\beta, \gamma \mid \alpha)\Pr(\alpha)}{\Pr(\beta, \gamma)} \tag{Bayes' Rule} \\
+			&= \frac{\Pr(\beta \mid \alpha)\Pr(\gamma \mid \alpha)\Pr(\alpha)}{\Pr(\beta, \gamma)} \tag{Conditional Independence}
+  	\end{align*}
+  	\item $\Pr(\beta \mid \alpha), \Pr(\gamma \mid \alpha)$, and $\Pr(\alpha)$ is sufficient to calculate what we want. It can be directly computed as follows (though note that this problem is likely computationally intractible):
+  	\begin{align*}
+			\Pr(\alpha \mid \beta, \gamma) &= \frac{\Pr(\beta, \gamma \mid \alpha)\Pr(\alpha)}{\Pr(\beta, \gamma)} \tag{Bayes' Rule} \\
+			&= \frac{\Pr(\beta \mid \alpha)\Pr(\gamma \mid \alpha)\Pr(\alpha)}{\Pr(\beta, \gamma)} \tag{Conditional Independence} \\
+			&= \frac{\Pr(\beta \mid \alpha)\Pr(\gamma \mid \alpha)\Pr(\alpha)}{\sum \Pr(\beta, \gamma \mid \alpha)P(\alpha)} \tag{Law of Total Probability} \\
+			&= \frac{\Pr(\beta \mid \alpha)\Pr(\gamma \mid \alpha)\Pr(\alpha)}{\sum \Pr(\beta \mid \alpha)\Pr(\gamma \mid \alpha)P(\alpha)} \tag{Conditional Independence}
+  	\end{align*}
+ 	\end{enumerate}
+\end{itemize}
+
+\pagebreak
+\section*{Problem 5}
+\begin{enumerate}
+\item We directly compute the result:
+\begin{align*}
+\Pr(A = 0, B = 0) &= \Pr(A = 0 \mid B = 0) \Pr(B = 0) \\
+&= \Pr(A = 0)\Pr(B = 0) \tag{$A$ and $B$ are independent since there are no active paths between them} \\
+&= 0.8 * 0.3 \\
+&= 0.24
+\end{align*}
+and
+\begin{align*}
+\Pr(E = 1 \mid A = 1) &=  \Pr(E = 1) \tag{$E \perp A$ since there are no active paths between $A$ and $E$} \\
+&= \Pr(E = 1 \mid B = 1)\Pr(B=1) + \Pr(E = 1 \mid B = 0)\Pr(B=0) \tag{total probability}\\
+&= 0.1(.7) + 0.9(0.3)\\
+&= 0.34
+\end{align*}
+\item
+\begin{enumerate}[label=(\alph*)]
+\item False. There is an active path given by $A \to C \to F \to H \leftarrow E$ because $H$ is in the observed set.
+\item True. There are only two paths between $G$ and $E$. The path $G \leftarrow F \leftarrow D \leftarrow B \to E$ is not active since $D$ is observed, and the path $G \leftarrow F \to H \leftarrow E$ is not active because $H$ is not observerd.
+\item False. There is an active path given directly by $B \to E \to H$, therefore $\{A,B\}$ and $\{G,H\}$ are not d-sep given $F$.
+\end{enumerate}
+\end{enumerate}
+
+\pagebreak
+\section*{Problem 6}
+
+\begin{enumerate}
+\item The expected Creativity score of a student is $E[C] = 0.5$.
+\item The expected Creativity score of an admitted student is:
+\item The expected Creativity score of a student with $I = 0.95$ is:
+$$
+E[C \mid I = 0.95] = E[C] = 0.5
+$$
+since $C \perp I$ so knowing $I = 0.95$ gives no information about $C$.
+\item The expected Creativity score of an admitted student with $I = 0.95$ is given by:
+$$
+E[C \mid C + I \geq 1.5, I = 0.95] = E[C \mid C \geq 0.45]
+$$
+\end{enumerate}
+
 
 \end{document}
