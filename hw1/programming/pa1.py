@@ -72,6 +72,25 @@ def get_p_x_cond_z1_z2(z1_val, z2_val):
   return pk
 
 
+def get_network_conditionals():
+  '''
+  returns P(z1, z2), P(x = 1 | z_1, z_2), P(x = 1 | z_1, x_2) as 625
+  and 2x625x784 matrices,respectively.
+  '''
+  zs = len(disc_z1) * len(disc_z2)
+  xk_conditional = np.zeros((2, zs, NUM_PIXELS))  # 2x625x784
+  z1_z2_joint = np.zeros(zs)  # 625
+  for i, z1_val in enumerate(disc_z1):
+    for j, z2_val in enumerate(disc_z2):
+      index = i * len(disc_z2) + j
+      z1_z2_joint[index] = get_p_z1(z1_val) * get_p_z2(z2_val)
+      xk_conditional[1, index] = get_p_x_cond_z1_z2(z1_val, z2_val)
+      xk_conditional[0, index] = 1 - xk_conditional[1, index]
+
+  assert abs(np.sum(z1_z2_joint) - 1) < 1e-7
+  return z1_z2_joint, xk_conditional[1], xk_conditional[0]
+
+
 def get_pixels_sampled_from_p_x_joint_z1_z2():
   '''
   This function should sample from the joint probability distribution specified
@@ -92,9 +111,40 @@ def get_pixels_sampled_from_p_x_joint_z1_z2():
 
 def get_conditional_expectation(data):
   '''
-  TODO
+  Computes all of E[(Z1, Z2) | X = data[i]].
+
+  p((Z1, Z2) = (z1, z2)|X1:784 = Ik) \propto P(X1:784 = Ik |Z1, Z2)P(Z1,Z2)
   '''
-  pass
+  # Precompute distributions. (625), (625x784), (625x784)
+  z1_z2_joint, xk1_conditional, xk0_conditional = get_network_conditionals()
+
+  # Compute valid z1 and z1 to multiply along 625 dimension.
+  zs = len(disc_z1) * len(disc_z2)
+  z1 = np.zeros(zs)
+  z2 = np.zeros(zs)
+  for i, z1_val in enumerate(disc_z1):
+    for j, z2_val in enumerate(disc_z2):
+      index = i * len(disc_z2) + j
+      z1[index] = z1_val
+      z2[index] = z2_val
+  z1 = z1.reshape((zs, 1))
+  z2 = z2.reshape((zs, 1))
+
+  mean_z1 = []
+  mean_z2 = []
+  for sample in data:
+    # 625 * 784
+    xk_conditional = np.where(sample == 1, xk1_conditional, xk0_conditional)
+    # 625 * 784
+    xk_z1_z2_joint = xk_conditional * z1_z2_joint.reshape(-1, 1)
+    # 625 * 784 but normalized along axis=0.
+    z1_z2_marginal_dist = xk_z1_z2_joint / np.sum(xk_z1_z2_joint, axis=0)
+    expected_z1 = np.sum(z1 * z1_z2_marginal_dist)
+    expected_z2 = np.sum(z2 * z1_z2_marginal_dist)
+    mean_z1.append(expected_z1)
+    mean_z2.append(expected_z2)
+
+  return mean_z1, mean_z2
 
 
 def q4():
@@ -139,25 +189,6 @@ def q5():
   return
 
 
-def get_network_conditionals():
-  '''
-  returns P(z1, z2), P(x = 1 | z_1, z_2), P(x = 1 | z_1, x_2) as 625
-  and 2x625x784 matrices,respectively.
-  '''
-  zs = len(disc_z1) * len(disc_z2)
-  xk_conditional = np.zeros((2, zs, NUM_PIXELS))  # 2x625x784
-  z1_z2_joint = np.zeros(zs)  # 625
-  for i, z1_val in enumerate(disc_z1):
-    for j, z2_val in enumerate(disc_z2):
-      index = i * len(disc_z2) + j
-      z1_z2_joint[index] = get_p_z1(z1_val) * get_p_z2(z2_val)
-      xk_conditional[1, index] = get_p_x_cond_z1_z2(z1_val, z2_val)
-      xk_conditional[0, index] = 1 - xk_conditional[1, index]
-
-  assert abs(np.sum(z1_z2_joint) - 1) < 1e-7
-  return z1_z2_joint, xk_conditional[1], xk_conditional[0]
-
-
 def compute_log_likelikehoods(data, log_x0, log_x1, log_z1_z2):
   '''
   Computes the log likelihood for all samples in data using the given
@@ -170,8 +201,10 @@ def compute_log_likelikehoods(data, log_x0, log_x1, log_z1_z2):
     assert log_xk_sample.shape == (625, 784)  # Sum over all pixels.
     log_x_sample = np.sum(log_xk_sample, axis=1)
     assert log_x_sample.shape == (625,)
+    inner_sum = log_x_sample + log_z1_z2
+    inner_max = np.max(inner_sum)
     log_likelihood.append(
-        np.log(np.sum(np.exp(log_x_sample + log_z1_z2))))
+        inner_max + np.log(np.sum(np.exp(inner_sum - inner_max))))
 
   return np.array(log_likelihood)
 
@@ -198,8 +231,6 @@ def q6():
 
   val_mean = np.mean(validation_log_likelihood)
   val_stddev = np.std(validation_log_likelihood)
-  print(val_mean)
-  print(val_stddev)
 
   test_log_likelihood = compute_log_likelikehoods(
       test_data,
@@ -207,7 +238,8 @@ def q6():
 
   is_real_image = np.abs(test_log_likelihood - val_mean) <= (3 * val_stddev)
   real_marginal_log_likelihood = test_log_likelihood[is_real_image]
-  corrupt_marginal_log_likelihood = test_log_likelihood[~is_real_image]
+  corrupt_marginal_log_likelihood = test_log_likelihood[
+      np.logical_not(is_real_image)]
 
   plot_histogram(real_marginal_log_likelihood,
                  title='Histogram of marginal log-likelihood for real data',
@@ -224,7 +256,7 @@ def q6():
 def q7():
   '''
   Loads the data and plots a color coded clustering of the conditional
-  expectations. Rest is TODO.
+  expectations.
   '''
 
   mat = loadmat('q7.mat')
@@ -234,7 +266,7 @@ def q7():
   mean_z1, mean_z2 = get_conditional_expectation(data)
 
   plt.figure()
-  plt.scatter(mean_z1, mean_z2, c=labels)
+  plt.scatter(mean_z1, mean_z2, c=labels.ravel())
   plt.colorbar()
   plt.grid()
   plt.savefig('a7', bbox_inches='tight')
@@ -271,13 +303,10 @@ def main():
   global bayes_net
   bayes_net = load_model('trained_mnist_model')
 
-  '''
-	TODO: Using the above Bayesian Network model, complete the following parts.
-	'''
   # q4()
   # q5()
-  q6()
-  # q7()
+  # q6()
+  q7()
 
   return
 

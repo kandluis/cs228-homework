@@ -310,7 +310,7 @@ We further note that $|Val(Z_i)| = 25$, so you need $2(25-1) = 48$ parameters to
 \item We show the five samples in Figure 
 \begin{figure}[h!]
 \centering
-\includegraphics{programming/a4.png}
+\includegraphics[scale=0.8]{programming/a4.png}
 \caption{Sampled Digits from Model}
 \label{fig:sampled_digits}
 \end{figure}
@@ -318,13 +318,32 @@ We further note that $|Val(Z_i)| = 25$, so you need $2(25-1) = 48$ parameters to
 \item We show the plot as we vary $Z_1$ and $Z_2$ in Figure \ref{fig:latent_variables}.
 \begin{figure}[h!]
 \centering
-\includegraphics{programming/a5.png}
+\includegraphics[scale=0.8]{programming/a5.png}
 \caption{Exploring Space of Latent Variables}
 \label{fig:latent_variables}
 \end{figure}
 
 The intuitive role for $Z_1$ (x-axis) appears to indicate how circular the value is (from 0 to 7 and from 3 to black). $Z_2$ on the other hand is more difficult to tell intuitively, though it appears to determine the horizontal width/lines.
 
-\item 
+\item We include the histograms of the marginal log likelihood $\log p(x_{1:784})$ for the real (Figure \ref{fig:hist_real}) and the corrupted data (Figure \ref{fig:hist_corrupted}).
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.8]{programming/a6_hist_real.png}
+\caption{Histogram of Marginal Log Likelihood for Real Images}
+\label{fig:hist_real}
+\end{figure}
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.8]{programming/a6_hist_corrupt.png}
+\caption{Histogram of Marginal Log Likelihood for Corrupted Images}
+\label{fig:hist_corrupted}
+\end{figure}
+
+\item We first note that we can use Bayes rule to simplify the computation:
+$$
+p((Z_1, Z_2) = (z_1, z_2)|X_{1:784} = I^k) \propto p(X_{1:784} = I^k \mid (Z_1, Z_2) = (z_1, z_2))p((Z_1, Z_2) = (z_1, z_2))
+$$
+We can easily compute the above for all values of $z_1, z_2$.
+
 \end{enumerate}
 \end{document}
