@@ -303,9 +303,9 @@ def main():
   global bayes_net
   bayes_net = load_model('trained_mnist_model')
 
-  # q4()
-  # q5()
-  # q6()
+  q4()
+  q5()
+  q6()
   q7()
 
   return
