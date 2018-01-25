@@ -4,3 +4,5 @@
 *.log
 *.pdf
 *.synctex.gz
+*.out
+.DS_Store
