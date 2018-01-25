@@ -12,7 +12,8 @@
 \begin{tabular}{rl}
 SUNet ID: & 05794739 \\
 Name: & Luis Perez \\
-Collaborators: &
+Collaborators: & \\
+Late Days: & 2
 \end{tabular}
 \end{center}
 
@@ -343,7 +344,15 @@ The intuitive role for $Z_1$ (x-axis) appears to indicate how circular the value
 $$
 p((Z_1, Z_2) = (z_1, z_2)|X_{1:784} = I^k) \propto p(X_{1:784} = I^k \mid (Z_1, Z_2) = (z_1, z_2))p((Z_1, Z_2) = (z_1, z_2))
 $$
-We can easily compute the above for all values of $z_1, z_2$.
+We can easily compute the above for all values of $z_1, z_2$, and we plot them along with their labels colored. We can see this in Figure \ref{fig:plot}. By Bayes Rule’, the posterior probability is directly proportional to the likelihood which leads
+to a similar clustering of points for the conditional expectations in part 5 and 7. The mapping is not perfect, but we can see that $0$ and $7$ and other similar numbers tend to generally be in the same orientation in the graph.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.8]{programming/a7.png}
+\caption{$E[Z_1 \mid X_{1:784}]$ by $E[Z_2 \mid \mid X_{1:784}]$}
+\label{fig:plot}
+\end{figure}
 
 \end{enumerate}
 \end{document}
