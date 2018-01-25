@@ -300,13 +300,13 @@ $$
 \section*{Problem 9}
 
 \begin{enumerate}
-\item The random vector $X_{1:768}$ can take $2^{768} \approx 1.55e231$ possible values.
-\item You would need $2^{768} - 1$ paramaters to specify an arbitrary probability distribution over the images.
-\item We note that the join distribution factorizes as:
+\item The random vector $X_{1:784}$ can take $2^{784} \approx 1.02e236$ possible values.
+\item You would need $2^{784} - 1$ paramaters to specify an arbitrary probability distribution over the images.
+\item We note that the joint distribution factorizes as:
 $$
-P(Z_1, Z_2, X_1, \cdots, X_{768}) = P(Z_1)P(Z_2)\prod_{i=1}^{768}P(X_i \mid Z_1, Z_2)
+P(Z_1, Z_2, X_1, \cdots, X_{784}) = P(Z_1)P(Z_2)\prod_{i=1}^{784}P(X_i \mid Z_1, Z_2)
 $$
-We further note that $|Val(Z_i)| = 25$, so you need $2(25-1) = 48$ parameters to specify $P(Z_1)$ and $P(Z_2)$. For each of $P(X_i \mid Z_1, Z_2)$, a total of $25*25*2 - 1 = 1249$ parameters are needed. This means the conditional distributions need a total of $959,232$ parameters to be specified, bringing the grand total for the network to $959,280 \approx 1M$.
+We further note that $|Val(Z_i)| = 25$, so you need $2(25-1) = 48$ parameters to specify $P(Z_1)$ and $P(Z_2)$. For each of $P(X_i \mid Z_1, Z_2)$, a total of $25*25*2 - 1 = 1249$ parameters are needed. This means the conditional distributions need a total of $979,216$ parameters to be specified, bringing the grand total for the network to $979,264 \approx 1M$.
 \item 
 \end{enumerate}
 \end{document}
