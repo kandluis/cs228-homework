@@ -306,7 +306,25 @@ $$
 $$
 P(Z_1, Z_2, X_1, \cdots, X_{784}) = P(Z_1)P(Z_2)\prod_{i=1}^{784}P(X_i \mid Z_1, Z_2)
 $$
-We further note that $|Val(Z_i)| = 25$, so you need $2(25-1) = 48$ parameters to specify $P(Z_1)$ and $P(Z_2)$. For each of $P(X_i \mid Z_1, Z_2)$, a total of $25*25*2 - 1 = 1249$ parameters are needed. This means the conditional distributions need a total of $979,216$ parameters to be specified, bringing the grand total for the network to $979,264 \approx 1M$.
+We further note that $|Val(Z_i)| = 25$, so you need $2(25-1) = 48$ parameters to specify $P(Z_1)$ and $P(Z_2)$. For each of $P(X_i \mid Z_1, Z_2)$, a total of $25*25 - 1 = 624$ parameters are needed (this is becase knowing $P(X=1 \mid Z_1, Z_2$ also lets us know $P(X = 0 \mid Z_1, Z_2)$). This means the conditional distributions need a total of $624 * 784 = 489,216$ parameters to be specified, bringing the grand total for the network to $489,264 \approx 0.5M$.
+\item We show the five samples in Figure 
+\begin{figure}[h!]
+\centering
+\includegraphics{programming/a4.png}
+\caption{Sampled Digits from Model}
+\label{fig:sampled_digits}
+\end{figure}
+
+\item We show the plot as we vary $Z_1$ and $Z_2$ in Figure \ref{fig:latent_variables}.
+\begin{figure}[h!]
+\centering
+\includegraphics{programming/a5.png}
+\caption{Exploring Space of Latent Variables}
+\label{fig:latent_variables}
+\end{figure}
+
+The intuitive role for $Z_1$ (x-axis) appears to indicate how circular the value is (from 0 to 7 and from 3 to black). $Z_2$ on the other hand is more difficult to tell intuitively, though it appears to determine the horizontal width/lines.
+
 \item 
 \end{enumerate}
 \end{document}

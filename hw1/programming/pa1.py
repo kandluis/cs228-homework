@@ -12,6 +12,9 @@ import pickle as pkl
 from scipy.io import loadmat
 
 
+NUM_PIXELS = 28*28
+
+
 def plot_histogram(data, title='histogram', xlabel='value', ylabel='frequency',
                    savefile='hist'):
   '''
@@ -50,7 +53,7 @@ def get_p_z2(z2_val):
 
 def get_p_xk_cond_z1_z2(z1_val, z2_val, k):
   '''
-  Helper. Computes the conditional probability that variable xk assumes value 1 
+  Helper. Computes the conditional probability that variable xk assumes value 1
   given that z1 assumes value z1_val and z2 assumes value z2_val
   P(Xk = 1 | Z1=z1_val , Z2=z2_val)
   '''
@@ -60,10 +63,9 @@ def get_p_xk_cond_z1_z2(z1_val, z2_val, k):
 
 def get_p_x_cond_z1_z2(z1_val, z2_val):
   '''
-  Computes the conditional probability of the entire vector x,
+  Computes the conditional probability of the entire vector x for x = 1,
   given that z1 assumes value z1_val and z2 assumes value z2_val
   '''
-  NUM_PIXELS = 28*28
   pk = np.zeros(NUM_PIXELS)
   for i in range(NUM_PIXELS):
     pk[i] = get_p_xk_cond_z1_z2(z1_val, z2_val, i+1)
@@ -72,19 +74,17 @@ def get_p_x_cond_z1_z2(z1_val, z2_val):
 
 def get_pixels_sampled_from_p_x_joint_z1_z2():
   '''
-  This function should sample from the joint probability distribution specified by the model, 
-  and return the sampled values of all the pixel variables (x). 
-  Note that this function should return the sampled values of ONLY the pixel variables (x),
-  discarding the z part.
+  This function should sample from the joint probability distribution specified
+  by the model, and return the sampled values of all the pixel variables (x).
+  Note that this function should return the sampled values of ONLY the pixel
+  variables (x), discarding the z part.
   '''
-  NUM_ZVALS = 25
-  ZVALS = np.linspace(-3.0, 3.0, num=NUM_ZVALS, endpoint=True)
-  z1_dist = [get_p_z1(z_val) for z_val in ZVALS]
+  z1_dist = [get_p_z1(z_val) for z_val in disc_z1]
   assert abs(np.sum(z1_dist) - 1) < 1e-7
-  z2_dist = [get_p_z2(z_val) for z_val in ZVALS]
+  z2_dist = [get_p_z2(z_val) for z_val in disc_z2]
   assert abs(np.sum(z2_dist) - 1) < 1e-7
-  z1_sample = np.random.choice(ZVALS, p=z1_dist)
-  z2_sample = np.random.choice(ZVALS, p=z2_dist)
+  z1_sample = np.random.choice(disc_z1, p=z1_dist)
+  z2_sample = np.random.choice(disc_z2, p=z2_dist)
   pixel_dist = get_p_x_cond_z1_z2(z1_sample, z2_sample)
   return np.array([np.random.choice([1, 0], p=[p1, 1.0-p1])
                    for p1 in pixel_dist])
@@ -99,8 +99,8 @@ def get_conditional_expectation(data):
 
 def q4():
   '''
-  Plots the pixel variables sampled from the joint distribution as 28 x 28 images.
-  Your job is to implement get_pixels_sampled_from_p_x_joint_z1_z2
+  Plots the pixel variables sampled from the joint distribution as 28 x 28
+  images. Your job is to implement get_pixels_sampled_from_p_x_joint_z1_z2
   '''
 
   plt.figure()
@@ -139,18 +139,75 @@ def q5():
   return
 
 
+def get_network_conditionals():
+  '''
+  returns P(z1, z2), P(x = 1 | z_1, z_2), P(x = 1 | z_1, x_2) as 625
+  and 2x625x784 matrices,respectively.
+  '''
+  zs = len(disc_z1) * len(disc_z2)
+  xk_conditional = np.zeros((2, zs, NUM_PIXELS))  # 2x625x784
+  z1_z2_joint = np.zeros(zs)  # 625
+  for i, z1_val in enumerate(disc_z1):
+    for j, z2_val in enumerate(disc_z2):
+      index = i * len(disc_z2) + j
+      z1_z2_joint[index] = get_p_z1(z1_val) * get_p_z2(z2_val)
+      xk_conditional[1, index] = get_p_x_cond_z1_z2(z1_val, z2_val)
+      xk_conditional[0, index] = 1 - xk_conditional[1, index]
+
+  assert abs(np.sum(z1_z2_joint) - 1) < 1e-7
+  return z1_z2_joint, xk_conditional[1], xk_conditional[0]
+
+
+def compute_log_likelikehoods(data, log_x0, log_x1, log_z1_z2):
+  '''
+  Computes the log likelihood for all samples in data using the given
+  distributions.
+  '''
+  log_likelihood = []
+  for sample in data:
+    assert sample.shape == (784,)
+    log_xk_sample = np.where(sample == 1, log_x1, log_x0)
+    assert log_xk_sample.shape == (625, 784)  # Sum over all pixels.
+    log_x_sample = np.sum(log_xk_sample, axis=1)
+    assert log_x_sample.shape == (625,)
+    log_likelihood.append(
+        np.log(np.sum(np.exp(log_x_sample + log_z1_z2))))
+
+  return np.array(log_likelihood)
+
+
 def q6():
   '''
-  Loads the data and plots the histograms. Rest is TODO.
+  Loads the data and plots the histograms.
   '''
 
   mat = loadmat('q6.mat')
   val_data = mat['val_x']
   test_data = mat['test_x']
 
-  '''
-	TODO
-	'''
+  z1_z2_joint, xk1_conditional, xk0_conditional = get_network_conditionals()
+
+  # Use exp-log-sum trick.
+  log_xk0_conditional = np.log(xk0_conditional)
+  log_xk1_conditional = np.log(xk1_conditional)
+  log_z1_z2_joint = np.log(z1_z2_joint)
+
+  validation_log_likelihood = compute_log_likelikehoods(
+      val_data,
+      log_xk0_conditional, log_xk1_conditional, log_z1_z2_joint)
+
+  val_mean = np.mean(validation_log_likelihood)
+  val_stddev = np.std(validation_log_likelihood)
+  print(val_mean)
+  print(val_stddev)
+
+  test_log_likelihood = compute_log_likelikehoods(
+      test_data,
+      log_xk0_conditional, log_xk1_conditional, log_z1_z2_joint)
+
+  is_real_image = np.abs(test_log_likelihood - val_mean) <= (3 * val_stddev)
+  real_marginal_log_likelihood = test_log_likelihood[is_real_image]
+  corrupt_marginal_log_likelihood = test_log_likelihood[~is_real_image]
 
   plot_histogram(real_marginal_log_likelihood,
                  title='Histogram of marginal log-likelihood for real data',
@@ -166,7 +223,8 @@ def q6():
 
 def q7():
   '''
-  Loads the data and plots a color coded clustering of the conditional expectations. Rest is TODO.
+  Loads the data and plots a color coded clustering of the conditional
+  expectations. Rest is TODO.
   '''
 
   mat = loadmat('q7.mat')
@@ -188,7 +246,8 @@ def q7():
 
 def load_model(model_file):
   '''
-  Loads a default Bayesian network with latent variables (in this case, a variational autoencoder)
+  Loads a default Bayesian network with latent variables (in this case, a
+  variational autoencoder)
   '''
 
   with open('trained_mnist_model', 'rb') as infile:
@@ -215,9 +274,9 @@ def main():
   '''
 	TODO: Using the above Bayesian Network model, complete the following parts.
 	'''
-  q4()
+  # q4()
   # q5()
-  # q6()
+  q6()
   # q7()
 
   return
