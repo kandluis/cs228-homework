@@ -13,6 +13,7 @@ from tree import get_mst, get_tree_root, get_tree_edges
 # pseudocounts for uniform dirichlet prior
 alpha = 0.1
 
+
 def renormalize(cnt):
   '''
   renormalize a Counter()
@@ -25,6 +26,8 @@ def renormalize(cnt):
 #--------------------------------------------------------------------------
 # Naive bayes CPT and classifier
 #--------------------------------------------------------------------------
+
+
 class NBCPT(object):
   '''
   NB Conditional Probability Table (CPT) for a child attribute.  Each child
@@ -37,27 +40,36 @@ class NBCPT(object):
     state of the learned parameters for this CPT
         - A_i: the index of the child variable
     '''
-    raise NotImplementedError()
+    super(NBCPT, self).__init__()
+
+    self.i = A_i
+    # Given each value of c (ie, c = 0 and c = 1)
+    self.pseudocounts = [alpha, alpha]
+    self.c_count = [2*alpha, 2*alpha]
 
   def learn(self, A, C):
     '''
-    TODO populate any instance variables specified in __init__ to learn
+    populate any instance variables specified in __init__ to learn
     the parameters for this CPT
-        - A: a 2-d numpy array where each row is a sample of assignments 
+        - A: a 2-d numpy array where each row is a sample of assignments
         - C: a 1-d n-element numpy where the elements correspond to the
           class labels of the rows in A
     '''
-    pass
+    for i in range(2):
+      self.c_count[i] += len(C[C == i])
+      self.pseudocounts[i] += len(C[(A[:, self.i] == 1) & (C == i)])
 
   def get_cond_prob(self, entry, c):
     '''
-    TODO return the conditional probability P(X|Pa(X)) for the values
+    return the conditional probability P(X|Pa(X)) for the values
     specified in the example entry and class label c
-        - entry: full assignment of variables 
+        - entry: full assignment of variables
             e.g. entry = np.array([0,1,1]) means A_0 = 0, A_1 = 1, A_2 = 1
-        - c: the class 
+        - c: the class
     '''
-    pass
+    entry_is_one_prob = self.pseudocounts[c] / float(self.c_count[c])
+    return entry_is_one_prob if entry[self.i] == 1 else (1 - entry_is_one_prob)
+
 
 class NBClassifier(object):
   '''
@@ -72,23 +84,30 @@ class NBClassifier(object):
         - P_c: the probabilities for the class variable C
         - cpts: a list of NBCPT objects
     '''
-    raise NotImplementedError()
+    super(NBClassifier, self).__init__()
+    assert(len(np.unique(C_train))) == 2
+    n, m = A_train.shape
+    self.cpts = [NBCPT(i) for i in range(m)]
+    self.P_c = 0.0
+    self._train(A_train, C_train)
 
   def _train(self, A_train, C_train):
     '''
-    TODO train your NB classifier with the specified data and class labels
+    train your NB classifier with the specified data and class labels
     hint: learn the parameters for the required CPTs
-        - A_train: a 2-d numpy array where each row is a sample of assignments 
+        - A_train: a 2-d numpy array where each row is a sample of assignments
         - C_train: a 1-d n-element numpy where the elements correspond to
           the class labels of the rows in A
     '''
-    pass
+    self.P_c = len(C_train[C_train == 1]) / float(len(C_train))
+    for cpt in self.cpts:
+      cpt.learn(A_train, C_train)
 
   def classify(self, entry):
     '''
-    TODO return the log probabilites for class == 0 and class == 1 as a
+    return the log probabilites for class == 0 and class == 1 as a
     tuple for the given entry
-    - entry: full assignment of variables 
+    - entry: full assignment of variables
     e.g. entry = np.array([0,1,1]) means variable A_0 = 0, A_1 = 1, A_2 = 1
 
     NOTE this must return both the predicated label {0,1} for the class
@@ -96,8 +115,15 @@ class NBClassifier(object):
     assignment in a tuple, e.g. return (c_pred, logP_c_pred)
 
     '''
-    pass
-    #return (c_pred, logP_c_pred)
+    # Calculate the log probability to avoid underflow issues.
+    # We DO NOT normalize these results.
+    logP_c_pred = [np.log(self.P_c), np.log(1 - self.P_c)]
+    for cpt in self.cpts:
+      for i in range(2):
+        logP_c_pred[i] += np.log(cpt.get_cond_prob(entry, i))
+
+    c_pred = np.argmax(logP_c_pred)
+    return (c_pred, logP_c_pred)
 
 
 #--------------------------------------------------------------------------
@@ -124,7 +150,7 @@ class TANBCPT(object):
     '''
     TODO populate any instance variables specified in __init__ to learn
     the parameters for this CPT
-     - A: a 2-d numpy array where each row is a sample of assignments 
+     - A: a 2-d numpy array where each row is a sample of assignments
      - C: a 1-d n-element numpy where the elements correspond to the class
        labels of the rows in A
     '''
@@ -133,13 +159,12 @@ class TANBCPT(object):
   def get_cond_prob(self, entry, c):
     '''
     TODO return the conditional probability P(X|Pa(X)) for the values
-    specified in the example entry and class label c  
-        - entry: full assignment of variables 
+    specified in the example entry and class label c
+        - entry: full assignment of variables
                 e.g. entry = np.array([0,1,1]) means A_0 = 0, A_1 = 1, A_2 = 1
-        - c: the class               
+        - c: the class
     '''
     pass
-
 
 
 class TANBClassifier(NBClassifier):
@@ -153,20 +178,19 @@ class TANBClassifier(NBClassifier):
     state of the trained classifier and populate them with a call to
     _train()
         - A_train: a 2-d numpy array where each row is a sample of
-          assignments 
+          assignments
         - C_train: a 1-d n-element numpy where the elements correspond to
           the class labels of the rows in A
 
     '''
     raise NotImplementedError()
 
-
   def _train(self, A_train, C_train):
     '''
     TODO train your TANB classifier with the specified data and class labels
     hint: learn the parameters for the required CPTs
         - A_train: a 2-d numpy array where each row is a sample of
-          assignments 
+          assignments
         - C_train: a 1-d n-element numpy where the elements correspond to
           the class labels of the rows in A
     hint: you will want to call functions imported from tree.py:
@@ -181,7 +205,7 @@ class TANBClassifier(NBClassifier):
     '''
     TODO return the log probabilites for class == 0 and class == 1 as a
     tuple for the given entry
-    - entry: full assignment of variables 
+    - entry: full assignment of variables
     e.g. entry = np.array([0,1,1]) means variable A_0 = 0, A_1 = 1, A_2 = 1
 
     NOTE: this class inherits from NBClassifier and it is possible to
@@ -197,6 +221,7 @@ class TANBClassifier(NBClassifier):
 # load all data
 A_base, C_base = load_vote_data()
 
+
 def evaluate(classifier_cls, train_subset=False):
   '''
   evaluate the classifier specified by classifier_cls using 10-fold cross
@@ -205,7 +230,7 @@ def evaluate(classifier_cls, train_subset=False):
   - train_subset: train the classifier on a smaller subset of the training
     data
   NOTE you do *not* need to modify this function
-  
+
   '''
   global A_base, C_base
 
@@ -217,35 +242,38 @@ def evaluate(classifier_cls, train_subset=False):
     results = []
     pp = []
     for entry, c in zip(A, C):
-      c_pred, _ = classifier.classify(entry)
+      c_pred, unused = classifier.classify(entry)
       results.append((c_pred == c))
-      pp.append(_)
-    #print 'logprobs', np.array(pp)
+      pp.append(unused)
+    # print('logprobs', np.array(pp))
     return results
   # partition train and test set for 10 rounds
   M, N = A.shape
   tot_correct = 0
   tot_test = 0
-  step = M / 10
-  for holdout_round, i in enumerate(xrange(0, M, step)):
-    A_train = np.vstack([A[0:i,:], A[i+step:,:]])
+  step = int(M / 10 + 1)
+  for holdout_round, i in enumerate(range(0, M, step)):
+    # print("Holdout round: %s." % (holdout_round + 1))
+    A_train = np.vstack([A[0:i, :], A[i+step:, :]])
     C_train = np.hstack([C[0:i], C[i+step:]])
-    A_test = A[i:i+step,:]
-    C_test = C[i:i+step]
+    A_test = A[i: i+step, :]
+    C_test = C[i: i+step]
     if train_subset:
-      A_train = A_train[:16,:]
-      C_train = C_train[:16]
+      A_train = A_train[: 16, :]
+      C_train = C_train[: 16]
 
     # train the classifiers
     classifier = classifier_cls(A_train, C_train)
-  
+
     train_results = get_classification_results(classifier, A_train, C_train)
-    #print '  train correct {}/{}'.format(np.sum(nb_results), A_train.shape[0])
+    # print(
+    #    '  train correct {}/{}'.format(np.sum(train_results), A_train.shape[0]))
     test_results = get_classification_results(classifier, A_test, C_test)
     tot_correct += sum(test_results)
     tot_test += len(test_results)
 
   return 1.*tot_correct/tot_test, tot_test
+
 
 def evaluate_incomplete_entry(classifier_cls):
 
@@ -259,31 +287,31 @@ def evaluate_incomplete_entry(classifier_cls):
 
   c_pred, logP_c_pred = classifier.classify(entry)
 
-  print '  P(C={}|A_observed) = {:2.4f}'.format(c_pred, np.exp(logP_c_pred))
+  print("  P(C={}|A_observed) = {:2.4f}".format(c_pred, np.exp(logP_c_pred)))
 
   return
+
 
 def main():
   '''
   TODO modify or add calls to evaluate() to evaluate your implemented
   classifiers
   '''
-  print 'Naive Bayes'
+  print('Naive Bayes')
   accuracy, num_examples = evaluate(NBClassifier, train_subset=False)
-  print '  10-fold cross validation total test accuracy {:2.4f} on {} examples'.format(
-    accuracy, num_examples)
+  print('  10-fold cross validation total test accuracy {:2.4f} on {} '
+        'examples'.format(accuracy, num_examples))
 
-  print 'TANB Classifier'
+  print('TANB Classifier')
   accuracy, num_examples = evaluate(TANBClassifier, train_subset=False)
-  print '  10-fold cross validation total test accuracy {:2.4f} on {} examples'.format(
-    accuracy, num_examples)
+  print('  10-fold cross validation total test accuracy {:2.4f} on {} '
+        'examples'.format(accuracy, num_examples))
 
-  print 'Naive Bayes Classifier on missing data'
+  print('Naive Bayes Classifier on missing data')
   evaluate_incomplete_entry(NBClassifier)
 
-  print 'TANB Classifier on missing data'
+  print('TANB Classifier on missing data')
   evaluate_incomplete_entry(TANBClassifier)
 
 if __name__ == '__main__':
   main()
-

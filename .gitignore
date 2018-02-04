@@ -9,3 +9,6 @@
 
 *.data
 *.names
+
+
+__pycache__/
