@@ -36,5 +36,6 @@ def load_incomplete_entry():
   with open(incomplete_data_path) as fin:
     for line in fin:
       entries = line.strip().split(',')
-      A_i = map(lambda x: 1 if x == 'y' else 0 if x == 'n' else -1, entries[:])
+      A_i = list(map(lambda x: 1 if x == 'y' else 0 if x ==
+                     'n' else -1, entries[:]))
       return np.array(A_i)

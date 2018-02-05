@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 from collections import Counter
+from builtins import map
 try:
   import networkx as nx
 except ImportError:
@@ -37,15 +38,15 @@ def compute_MI(A, C, i, j):
     p_cond_j.update(A[mask, j])
     p_cond_j = renormalize(p_cond_j)
     idxs = [(a_i, a_j) for a_i in range(2) for a_j in range(2)]
-    idxs = filter(lambda idx: p_joint[idx] > 0, idxs)
-    # print 'p_joint', map(lambda idx: p_joint[idx], idxs)
-    # print 'p_cond_i', map(lambda a_i, _): p_cond_i[a_i], idxs)
-    # print 'p_cond_j', map(lambda _, a_j): p_cond_j[a_j], idxs)
+    idxs = [idx for idx in idxs if p_joint[idx] > 0]
+    # print('p_joint', [p_joint[idx] for idx in idxs])
+    # print('p_cond_i', [p_cond_i[a_i] for a_i, _ in idxs])
+    # print('p_cond_j', [p_cond_j[a_j] for _, a_j in idxs])
     _I_ij = p_c * sum(
-        np.array(map(lambda idx: p_joint[idx], idxs)) *
-        np.log(map(lambda idx: p_joint[idx], idxs)) - (
-            np.log(map(lambda a_i, _: p_cond_i[a_i], idxs)) +
-            np.log(map(lambda _, a_j: p_cond_j[a_j], idxs))
+        np.array([p_joint[idx] for idx in idxs]) *
+        np.log([p_joint[idx] for idx in idxs]) - (
+            np.log([p_cond_i[a_i] for a_i, _ in idxs]) +
+            np.log([p_cond_j[a_j] for _, a_j in idxs])
         )
     )
     assert _I_ij >= 0

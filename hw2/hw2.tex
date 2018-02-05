@@ -13,7 +13,7 @@
 SUNet ID: & 05794739 \\
 Name: & Luis Perez \\
 Collaborators: & \\
-Late Days: & 0
+Late Days: & 2
 \end{tabular}
 \end{center}
 
@@ -23,7 +23,7 @@ that all of this is my own work.
 \section*{Problem 1}
 
 \begin{enumerate}[label=(\alph*)]
-  \item We can draw the network as follows. We first note that $(A \perp C \mid B) \land (A \perp D \mid B, C) \implies A \perp C,D \mid B)$ (similarly, we can collaps $A \perp D \mid B \land A \perp C \mid B,D \implies A \perp (C,D) \mid B$). We therefore know that observing $B$ must "block" any paths from $A$ to both $C$ and $D$. Furthermore, we know that $B \perp D$ and $A \perp D$, so we cannot have $B,D$ or $A,D$ connected. We guess and come up with the network shown in Figure \ref{fig:bayesian_perfect_map}. 
+  \item We can draw the network as follows. We first note that $(A \perp C \mid B) \land (A \perp D \mid B, C) \implies A \perp C,D \mid B)$ (similarly, we can collaps $A \perp D \mid B \land A \perp C \mid B,D \implies A \perp (C,D) \mid B$). We therefore know that observing $B$ must ``block'' any paths from $A$ to both $C$ and $D$. Furthermore, we know that $B \perp D$ and $A \perp D$, so we cannot have $B,D$ or $A,D$ connected. We guess and come up with the network shown in Figure \ref{fig:bayesian_perfect_map}. 
 
   \begin{figure}[!h]
   	\centering
@@ -126,6 +126,7 @@ that all of this is my own work.
 \end{enumerate}
 
 
+\pagebreak
 \section*{Problem 2}
 
 \begin{enumerate}[label=(\alph*)]
@@ -176,8 +177,8 @@ Therefore we can safely conclude that $C \perp D$ but $C \not\perp B$.
 		\draw [black] (28.96,-35.03) -- (32.64,-30.77);
 		\fill [black] (32.64,-30.77) -- (31.74,-31.05) -- (32.49,-31.7);
 	\end{tikzpicture}
-	\label{fig:directed_result}
 	\caption{Bayesian net with directed edges for $P$ filled in.}
+	\label{fig:directed_result}
 \end{figure}
 
 
@@ -219,6 +220,8 @@ P(A= 1, B = 0, C =1, D = 1) & = \frac{1}{2} \cdot \frac{1}{2} \cdot 1 \cdot 1 &=
 \end{align*}
 \end{enumerate}
 
+
+\pagebreak
 \section*{Problem 3}
 
 \begin{enumerate}[label=(\alph*)]
@@ -256,6 +259,7 @@ Therefore, we can push the sum into only the factors that are affected by it. Fo
 \item No. If we consider the sum-product algorithm, computing the normalizing constant would be exponenential since the size of the largest clique in any of the induced graphs is always either $m$ or $n$. WLOG, suppose we attempt to marginalize out $h_i$. Then we will introduce a new factor $\phi$ which connects all of $v_i$ with each other. This immediately introduces a clique of size $m$, and therefore, we will have an exponential algorith.
 \end{enumerate}
 
+\pagebreak
 \section*{Problem 4}
 
 We can compute this directly. WLOG, we re-label the edges such that $x_1 \to x_n$ is the newly added edge to form $G'$. We also denote $\circ$ as the vector concatenation operator. We show a step by step derivation of the inequality:
@@ -278,6 +282,23 @@ Given the above, we note that the original LHS must be larger than or equal to t
 $$
 \max_{\theta'} \ell_{G'}(\theta';\mathcal{D}) \geq \max_{\theta} \ell_{G}(\theta;\mathcal{D})
 $$
+
+\pagebreak
+\section*{Problem 5}
+
+Note that we modified the starter code to ``actually'' do cross validation only 10 times :)
+\begin{enumerate}[label=(\alph*)]
+\item For the Naive Bayes Classifier, 10-fold cross validation total test accuracy is 0.9181 on 232 examples, which gives a test error of 0.0819.
+\item For the Tree Augmented Naive Bayes Classifer, 10-fold cross validation total test accuracy is 0.9698 on 232 examples, which gives a test error of 0.0302.
+\item We can evaluate on the missing data by marginalizing the unknown variables as described in the problem. In this case, the Naive Bayes models gives a $97.73\%$ chance to label being Democrat. The TABN classifier on the other hand gives a $100\%$ chance. Furthermore, it is simple to calculate $P(A_{12} \mid A_{observed})$. We simply have:
+$$
+P(A_{12} \mid A_{observed}) = \frac{\sum_{a_{-observed}, c}P(A_1, \cdots, A_{16}, C)}{\sum_{a_{-observed},c,a_{12}}P(A_1, \cdots, A_{16}, C)}
+$$
+
+Prediting vote of A12 using NBClassifier on missing data as $P(A_{12}=1|A_{observed}) = 0.1416$ using Naive Bayes and prediting vote of A12 using TANBClassifier on missing data as $P(A_{12}=1|A_{observed}) = 0.1024$.
+
+\item Naive Bayes (Small Data) 10-fold cross validation total test accuracy is 0.9009 on 232 examples. However, TANB Classifier (Small Data) 10-fold cross validation total test accuracy is 0.8534 on 232 examples. The reason why the test error on the TABN might be higher than the test error on the Naive Bayes is because the TANB is a more complex model, and was therefore better able to fit the training data distribution. In this case, since the training data was quite small, this led to overfitting, leading to poorer performance on the test set. On the other hand, the Naive Bayes did not overfit as much (due to its more limited model capacity), and was therefore able to perform better on the test set.
+\end{enumerate}
 
 
 \end{document}

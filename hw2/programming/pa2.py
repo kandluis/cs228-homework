@@ -4,6 +4,8 @@ import numpy as np
 from scipy.misc import logsumexp
 from collections import Counter
 import random
+import itertools
+from itertools import product
 
 # helpers to load data
 from data_helper import load_vote_data, load_incomplete_entry
@@ -117,18 +119,72 @@ class NBClassifier(object):
     '''
     # Calculate the log probability to avoid underflow issues.
     # We DO NOT normalize these results.
-    logP_c_pred = [np.log(self.P_c), np.log(1 - self.P_c)]
-    for cpt in self.cpts:
+    P_c_pred = [0, 0]
+    # Find all unobserved so we can try all settings of them.
+    unobserved_idx = [i for i, e in enumerate(entry) if e == -1]
+    # Add empty set so loop is always executed even when we have full
+    # assignment.
+    unobserved_assigments = list(itertools.product(
+        (0, 1), repeat=len(unobserved_idx))) + [[]]
+    for unobserved_assigment in unobserved_assigments:
+      probability = 0.0
+      for i, value in enumerate(unobserved_assigment):
+        entry[unobserved_idx[i]] = value
+
+      # Calculate joint given the above
+      full_P_c_pred = [1 - self.P_c, self.P_c]
+      for cpt in self.cpts:
+        for i in range(2):
+          full_P_c_pred[i] *= cpt.get_cond_prob(entry, i)
+
       for i in range(2):
-        logP_c_pred[i] += np.log(cpt.get_cond_prob(entry, i))
+        P_c_pred[i] += full_P_c_pred[i]
 
-    c_pred = np.argmax(logP_c_pred)
-    return (c_pred, logP_c_pred)
+    # Normalize the distributions.
+    P_c_pred /= np.sum(P_c_pred)
+    c_pred = np.argmax(P_c_pred)
+    return (c_pred, np.log(P_c_pred[c_pred]))
 
+  def predict_unobserved(self, entry, index):
+    '''
+    Predicts P(A_index = 1 \mid entry)
+    '''
+    if entry[index] == 1 or entry[index] == 0:
+      return [1-entry[index], entry[index]]
+
+    # Not observed, so use model to predict.
+    P_index_pred = [0.0, 0.0]
+    # Find all unobserved so we can try all settings of them except the one
+    # we wish to predict.
+    unobserved_idx = [i for i, e in enumerate(entry) if e == -1 and i != index]
+    # Add empty set so loop is always executed even when we have full
+    # assignment.
+    unobserved_assigments = list(itertools.product(
+        (0, 1), repeat=len(unobserved_idx))) + [[]]
+    for p_value in range(2):
+      entry[index] = p_value
+      for unobserved_assigment in unobserved_assigments:
+        probability = 0.0
+        for i, value in enumerate(unobserved_assigment):
+          entry[unobserved_idx[i]] = value
+
+        # Calculate joint given the above
+        full_P_c_pred = [1 - self.P_c, self.P_c]
+        for cpt in self.cpts:
+          for i in range(2):
+            full_P_c_pred[i] *= cpt.get_cond_prob(entry, i)
+        # Sum over c.
+        P_index_pred[p_value] += np.sum(full_P_c_pred)
+
+      # Normalize the distributions.
+    P_index_pred /= np.sum(P_index_pred)
+    return P_index_pred
 
 #--------------------------------------------------------------------------
 # TANB CPT and classifier
 #--------------------------------------------------------------------------
+
+
 class TANBCPT(object):
   '''
   TANB CPT for a child attribute.  Each child can have one other attribute
@@ -144,7 +200,17 @@ class TANBCPT(object):
      - A_p: the index of its parent variable (in the Chow-Liu algorithm,
        the learned structure will have a single parent for each child)
     '''
-    raise NotImplementedError()
+    super(TANBCPT, self).__init__()
+    self.i = A_i
+    self.p = A_p
+    # Given each value of c (ie, c = 0 and c = 1) we have access to the pseudo
+    # counts for different settings of A_i and A_p.
+    # eg. self.pseudocounts[a_i][a_p][c] is the pseudo count of A_i = a_i,
+    # A_p = a_p | C = c.
+    self.pseudocounts = [[[alpha, alpha], [alpha, alpha]],
+                         [[alpha, alpha], [alpha, alpha]]]
+    # To make sure the joint probabilites are normalized for each c.
+    self.c_count = [4*alpha, 4*alpha]
 
   def learn(self, A, C):
     '''
@@ -154,7 +220,12 @@ class TANBCPT(object):
      - C: a 1-d n-element numpy where the elements correspond to the class
        labels of the rows in A
     '''
-    pass
+    for c in range(2):
+      self.c_count[c] += len(C[C == c])
+      for ai in range(2):
+        for ap in range(2):
+          self.pseudocounts[ai][ap][c] += len(
+              C[(A[:, self.i] == ai) & (A[:, self.p] == ap) & (C == c)])
 
   def get_cond_prob(self, entry, c):
     '''
@@ -164,7 +235,9 @@ class TANBCPT(object):
                 e.g. entry = np.array([0,1,1]) means A_0 = 0, A_1 = 1, A_2 = 1
         - c: the class
     '''
-    pass
+    ai = entry[self.i]
+    ap = entry[self.p]
+    return self.pseudocounts[ai][ap][c] / float(self.c_count[c])
 
 
 class TANBClassifier(NBClassifier):
@@ -183,40 +256,17 @@ class TANBClassifier(NBClassifier):
           the class labels of the rows in A
 
     '''
-    raise NotImplementedError()
+    assert(len(np.unique(C_train))) == 2
 
-  def _train(self, A_train, C_train):
-    '''
-    TODO train your TANB classifier with the specified data and class labels
-    hint: learn the parameters for the required CPTs
-        - A_train: a 2-d numpy array where each row is a sample of
-          assignments
-        - C_train: a 1-d n-element numpy where the elements correspond to
-          the class labels of the rows in A
-    hint: you will want to call functions imported from tree.py:
-        - get_mst(): build the mst from input data
-        - get_tree_root(): get the root of a given mst
-        - get_tree_edges(): iterate over all edges in the rooted tree.
-          each edge (a,b) => a -> b
-    '''
-    pass
+    mst = get_mst(A_train, C_train)
+    root = get_tree_root(mst)
+    self.cpts = []
+    for (A_p, A_i) in get_tree_edges(mst, root):
+      self.cpts.append(TANBCPT(A_i, A_p))
 
-  def classify(self, entry):
-    '''
-    TODO return the log probabilites for class == 0 and class == 1 as a
-    tuple for the given entry
-    - entry: full assignment of variables
-    e.g. entry = np.array([0,1,1]) means variable A_0 = 0, A_1 = 1, A_2 = 1
+    self.P_c = 0.0
 
-    NOTE: this class inherits from NBClassifier and it is possible to
-    write this method in NBClassifier, such that this implementation can
-    be removed
-
-    NOTE this must return both the predicated label {0,1} for the class
-    variable and also the log of the conditional probability of this
-    assignment in a tuple, e.g. return (c_pred, logP_c_pred)
-    '''
-    pass
+    self._train(A_train, C_train)
 
 # load all data
 A_base, C_base = load_vote_data()
@@ -286,8 +336,22 @@ def evaluate_incomplete_entry(classifier_cls):
   entry = load_incomplete_entry()
 
   c_pred, logP_c_pred = classifier.classify(entry)
-
   print("  P(C={}|A_observed) = {:2.4f}".format(c_pred, np.exp(logP_c_pred)))
+
+  return
+
+
+def predict_unobserved(classifier_cls, index=11):
+  global A_base, C_base
+
+  # train a TANB classifier on the full dataset
+  classifier = classifier_cls(A_base, C_base)
+
+  # load incomplete entry 1
+  entry = load_incomplete_entry()
+
+  a_pred = classifier.predict_unobserved(entry, index)
+  print("  P(A{}=1|A_observed) = {:2.4f}".format(index+1, a_pred[1]))
 
   return
 
@@ -312,6 +376,24 @@ def main():
 
   print('TANB Classifier on missing data')
   evaluate_incomplete_entry(TANBClassifier)
+
+  index = 11
+  print('Prediting vote of A%s using NBClassifier on missing data' % (
+      index + 1))
+  predict_unobserved(NBClassifier, index)
+  print('Prediting vote of A%s using TANBClassifier on missing data' % (
+      index + 1))
+  predict_unobserved(TANBClassifier, index)
+
+  print('Naive Bayes (Small Data)')
+  accuracy, num_examples = evaluate(NBClassifier, train_subset=True)
+  print('  10-fold cross validation total test accuracy {:2.4f} on {} '
+        'examples'.format(accuracy, num_examples))
+
+  print('TANB Classifier (Small Data)')
+  accuracy, num_examples = evaluate(TANBClassifier, train_subset=True)
+  print('  10-fold cross validation total test accuracy {:2.4f} on {} '
+        'examples'.format(accuracy, num_examples))
 
 if __name__ == '__main__':
   main()
