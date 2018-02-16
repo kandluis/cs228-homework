@@ -184,7 +184,7 @@ In this case, we note that the maximum is actually achieved for $x_2 = 1$ as the
 \end{enumerate}
 
 \pagebreak
-\section*{Problem 3}
+\section*{Problem 4}
 
 \begin{enumerate}[label=(\alph*)]
 \item 
@@ -242,5 +242,33 @@ In this case, we note that the maximum is actually achieved for $x_2 = 1$ as the
 		&= \hat{P}(X = x \mid E = e)
 	\end{align*}
 \end{enumerate}
+
+
+\pagebreak
+\section*{Problem 5}
+
+
+\begin{enumerate}[label=(\alph*)]
+\item We verify with the following codes:
+	\begin{itemize}
+		\item Invalid: $[0, 1, 1, 0, 1, 0]$ which produces $0.0$
+    \item Invalid: $[1, 0, 1, 1, 0, 1]$ which produces $0.0$
+    \item Valid: $[1, 0, 1, 1, 1, 1]$ which produces $\sim0.039 > 0.0$
+	\end{itemize}
+\item See source code.
+\item We plot the stimated posterior probabability conditioned on the noisy message. We see this plot in Figure \ref{fig:conditional_probability_message}.
+
+\begin{figure}[!h]
+\centering
+\includegraphics{programming/5c}
+\caption{Plot of Each Bit Posterior Probability Conditioned on Evidence}
+\label{fig:conditional_probability_message}
+\end{figure}
+
+In general, the MMAP does not necessarily give us the right answer. We note that in this case, MMAP would again not give us the correct solution since we can verify that the MMAP solution is actually not even a valid codeword (our model assigns it probability $0$).
+
+\item 
+\end{enumerate}
+
 
 \end{document}

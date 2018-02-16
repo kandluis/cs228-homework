@@ -1,5 +1,5 @@
 ###############################################################################
-# utility functions for manipulating factors; ported from Daphne Koller's 
+# utility functions for manipulating factors; ported from Daphne Koller's
 # Matlab utility code
 # author: Ya Le, Billy Jun, Xiaocheng Li
 # date: Jan 25, 2018
@@ -27,10 +27,11 @@ def assignment_to_indices(A, card):
     if np.any(np.shape(A) == 1):
         I = np.cumprod(np.concatenate(([1.0], C[:0:-1]))) * (A.T).flatten()
     else:
-        B = A[:,::-1]
-        I = np.sum(np.tile(np.cumprod(np.concatenate(([1.0], C[:0:-1]))), \
-                (B.shape[0], 1)) * B, axis=1)
+        B = A[:, ::-1]
+        I = np.sum(np.tile(np.cumprod(np.concatenate(([1.0], C[:0:-1]))),
+                           (B.shape[0], 1)) * B, axis=1)
     return np.array(I, dtype='int32')
+
 
 def indices_to_assignment(I, card):
     """
@@ -41,10 +42,10 @@ def indices_to_assignment(I, card):
     card = np.array(card, copy=False)
     C = card.flatten()
     A = np.mod(np.floor(
-            np.tile(I.flatten().T, (len(card), 1)).T / \
-            np.tile(np.cumprod(np.concatenate(([1.0], C[:0:-1]))), (len(I), 1))), \
-            np.tile(C[::-1], (len(I), 1)))
-    return A[:,::-1]
+        np.tile(I.flatten().T, (len(card), 1)).T /
+        np.tile(np.cumprod(np.concatenate(([1.0], C[:0:-1]))), (len(I), 1))),
+        np.tile(C[::-1], (len(I), 1)))
+    return A[:, ::-1]
 
 
 def intersection_indices(a, b):
@@ -69,7 +70,9 @@ def intersection_indices(a, b):
             mapB.append(bind.get(itm))
     return mapA, mapB
 
+
 class Factor:
+
     def __init__(self, f=None, scope=[], card=[], val=None, name="[unnamed]"):
         """
         :param Factor f: if this parameter is not None, then the constructor makes a 
@@ -85,7 +88,8 @@ class Factor:
         """
         assert len(scope) == len(card)
 
-        # self.scope: a list of the variables over which this Factor defines a distribution
+        # self.scope: a list of the variables over which this Factor defines a
+        # distribution
         self.scope = scope
 
         # self.card: the cardinality of each variable in self.scope
@@ -125,10 +129,10 @@ class Factor:
         the two representations of the values of a factor.  (Again, these two representations
         are multidimensional array versus vector, and are navigated via the functions 
         assignment_to_indices and indices_to_assignment)
-        """         
-
-        g = Factor() # modify this to be the composition of two Factors and then return it
-        g.name = "(%s %s %s)"%(self.name, opname, f.name)
+        """
+        # modify this to be the composition of two Factors and then return it
+        g = Factor()
+        g.name = "(%s %s %s)" % (self.name, opname, f.name)
 
         if len(f.scope) == 0:
             return Factor(self)
@@ -136,22 +140,22 @@ class Factor:
             return Factor(f)
         g.scope = list(set(self.scope) | set(f.scope))
 
-        # Below regamarole just sets the cardinality of the variables in the scope of g.
+        # Below regamarole just sets the cardinality of the variables in the
+        # scope of g.
         g.card = np.zeros(len(g.scope), dtype='int32')
         _, m1 = intersection_indices(self.scope, g.scope)
         g.card[m1] = self.card
         _, m2 = intersection_indices(f.scope, g.scope)
         g.card[m2] = f.card
 
-        #initialize g's value to zero
+        # initialize g's value to zero
         g.val = np.zeros(g.card)
-        
+
         a = indices_to_assignment(range(np.prod(g.card)), g.card)
-        i1 = assignment_to_indices(a[:,m1], self.card)
-        i2 = assignment_to_indices(a[:,m2], f.card)
+        i1 = assignment_to_indices(a[:, m1], self.card)
+        i2 = assignment_to_indices(a[:, m2], f.card)
         g.val = np.reshape(operator(self.val.flat[i1], f.val.flat[i2]), g.card)
         return g
-
 
     def sum(self, f):
         """
@@ -160,8 +164,7 @@ class Factor:
         :param Factor f: the factor by which to multiply this factor.
         :rtype: Factor
         """
-        return self.compose_factors(f, operator=lambda x, y: x+y, opname = "+")   
-
+        return self.compose_factors(f, operator=lambda x, y: x+y, opname="+")
 
     def multiply(self, f):
         """
@@ -172,8 +175,8 @@ class Factor:
 
         :param Factor f: the factor by which to multiply this factor.
         :rtype: Factor
-        """      
-        return self.compose_factors(f, operator=lambda x, y: x*y, opname = "*")  
+        """
+        return self.compose_factors(f, operator=lambda x, y: x*y, opname="*")
 
     def divide(self, f):
         """
@@ -185,7 +188,7 @@ class Factor:
         :param Factor f: the factor by which to divide this factor.
         :rtype: Factor
         """
-        return self.compose_factors(f, operator=lambda x, y: x/y, opname = "/")      
+        return self.compose_factors(f, operator=lambda x, y: x/y, opname="/")
 
     def marginalize_all_but(self, var):
         """
@@ -213,28 +216,27 @@ class Factor:
             g.card[mg[i]] = self.card[msi]
         g.val = np.zeros(g.card)
         sa = indices_to_assignment(range(np.prod(self.card)), self.card)
-        indxG = assignment_to_indices(sa[:,ms], g.card)
+        indxG = assignment_to_indices(sa[:, ms], g.card)
         for i in range(np.prod(self.card)):
             g.val.flat[indxG[i]] += self.val.flat[i]
         return g
-
 
     def observe(self, var, val):
         """
         Returns a version of this factor with variable var observed as having taken on value val.
         if var is not in the scope of this Factor, a duplicate of this factor is returned.
-        
+
         :param str var: the observed variable
         :param int val: the value that variable took on
         :return: a Factor corresponding to this factor with var observed at val
 
         This will involve zeroing out certain rows/columns, and may involve reordering axes.
         """
-        f = Factor(self) #make copy.  You'll modify this.
-        f.name = "(%s with variable %s observed as %s)"%(self.name, var, val)    
+        f = Factor(self)  # make copy.  You'll modify this.
+        f.name = "(%s with variable %s observed as %s)" % (self.name, var, val)
         if var not in self.scope:
             return Factor(self)
-        
+
         idx = f.scope.index(var)
 
         order = range(len(f.scope))
@@ -248,23 +250,24 @@ class Factor:
             if j != val:
                 permuted[j].fill(0.0)
         return f
-   
+
     def normalize(self):
-       """
-       Normalize f to a probability distribution
-       """
-       f = Factor(self)
-       f.val /= np.sum(f.val.flatten())
-       return f
-       
+        """
+        Normalize f to a probability distribution
+        """
+        f = Factor(self)
+        f.val /= np.sum(f.val.flatten())
+        return f
+
     def __repr__(self):
         """
         returns a descriptive string representing this factor!
         """
-        r = "Factor object with scope %s and corresponding cardinalities %s"%(self.scope, self.card)
+        r = "Factor object with scope %s and corresponding cardinalities %s" % (
+            self.scope, self.card)
         r += "\nCPD:\n" + str(self.val)
         if self.name:
-            r = "Factor %s:\n"%self.name + r
+            r = "Factor %s:\n" % self.name + r
         return r + "\n"
 
     def __str__(self):
@@ -272,6 +275,4 @@ class Factor:
         returns a nice string representing this factor!  Note that we can now use string formatting
         with %s and this will cast our class into somethign nice and readable.
         """
-        return self.name   
-
-
+        return self.name
