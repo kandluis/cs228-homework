@@ -31,7 +31,7 @@ def loadImage(fname, iname):
     '''
     :param - fname: the file name containing the image
     :param - iname: the name of the image
-    (We will provide the code using this function, so you don't need to worry too much about it)  
+    (We will provide the code using this function, so you don't need to worry too much about it)
 
     return: image data in matrix form
     '''
@@ -44,8 +44,8 @@ def applyChannelNoise(y, epsilon):
     :param y - codeword with 2N entries
     :param epsilon - the probability that each bit is flipped to its complement
 
-    return corrupt message yTilde  
-    yTilde_i is obtained by flipping y_i with probability epsilon 
+    return corrupt message yTilde
+    yTilde_i is obtained by flipping y_i with probability epsilon
     '''
     ##########################################################################
     yTilde = np.mod(
@@ -69,7 +69,7 @@ def constructFactorGraph(yTilde, H, epsilon):
     :param - yTilde: observed codeword
         type: numpy.ndarray containing 0's and 1's
         shape: 2N
-    :param - H parity check matrix 
+    :param - H parity check matrix
              type: numpy.ndarray
              shape: N x 2N
     :param epsilon - the probability that each bit is flipped to its complement
@@ -77,7 +77,7 @@ def constructFactorGraph(yTilde, H, epsilon):
     return G factorGraph
 
     You should consider two kinds of factors:
-    - M unary factors 
+    - M unary factors
     - N each parity check factors
     '''
     N = H.shape[0]
@@ -151,7 +151,7 @@ def do_part_a():
 
 def do_part_c():
     '''
-    In part b, we provide you an all-zero initialization of message x, you should 
+    In part b, we provide you an all-zero initialization of message x, you should
     apply noise on y to get yTilde, and then do loopy BP to obatin the
     marginal probabilities of the unobserved y_i's.
     '''
@@ -192,7 +192,7 @@ def do_part_c():
 def do_part_de(numTrials, error, iterations=50):
     '''
     param - numTrials: how many trials we repreat the experiments
-    param - error: the transmission error probability 
+    param - error: the transmission error probability
     param - iterations: number of Loopy BP iterations we run for each trial
     '''
     G, H = loadLDPC('ldpc36-128.mat')
@@ -206,7 +206,7 @@ def do_part_de(numTrials, error, iterations=50):
     plt.title("Plot of the Hamming Distance Between MMAP and True Over 10 Trials")
     plt.ylabel("Hamming Distance")
     plt.xlabel("Iteration Number of Loopy Belief Propagation")
-    for trial in range(10):
+    for trial in range(1):
         ##############################################################
         # To do: your code starts here
         yTilde = applyChannelNoise(y, error)
@@ -216,13 +216,14 @@ def do_part_de(numTrials, error, iterations=50):
             G.runParallelLoopyBP(1)
             if it % 10 == 0 and it > 0:
                 print("Finished iteration %s of Loopy" % it)
+            print(G.estimateMarginalProbability(1))
             MMAP = G.getMarginalMAP()
             hamming_distance = np.sum(MMAP)
             values.append(hamming_distance)
 
         plt.plot(values)
 
-    plt.savefig('5d_epsilon=%s' % error, bbox_inches='tight')
+    plt.savefig('5d_epsilon=' + str(int(100*error)), bbox_inches='tight')
     plt.show()
     plt.close()
 
@@ -231,7 +232,7 @@ def do_part_de(numTrials, error, iterations=50):
 
 def do_part_fg(error):
     '''
-    param - error: the transmission error probability 
+    param - error: the transmission error probability
     '''
     G, H = loadLDPC('ldpc36-1600.mat')
     img = loadImage('images.mat', 'cs242')
@@ -239,18 +240,29 @@ def do_part_fg(error):
     # To do: your code starts here
     # You should flattern img first and treat it as the message x in the
     # previous parts.
+    original_shape = img.shape
+    N = G.shape[1]
+    x = img.flatten()
+    y = encodeMessage(x, G)
+    yTilde = applyChannelNoise(y, error)
+    G = constructFactorGraph(yTilde, H, error)
+    plot_iterations = [0, 1, 2, 3, 5, 10, 20, 30]
+    for it in range(31):
+        G.runParallelLoopyBP(1)
+        if it in plot_iterations:
+            s
 
-    ################################################################
+################################################################
 
 # print('Doing part (a): Should see 0.0, 0.0, >0.0')
 # do_part_a()
 # print('Doing part (c)')
-# do_part_c()
+do_part_c()
 print('Doing part (d)')
-do_part_de(10, 0.06)
+#do_part_de(10, 0.06)
 print('Doing part (e)')
-do_part_de(10, 0.08)
-do_part_de(10, 0.10)
+#do_part_de(10, 0.08)
+#do_part_de(10, 0.10)
 print('Doing part (f)')
 # do_part_fg(0.06)
 print('Doing part (g)')

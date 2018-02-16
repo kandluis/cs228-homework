@@ -156,7 +156,7 @@ class FactorGraph:
             if res is None:
                 res = self.messagesFactorToVar[(factor, var)]
             else:
-                res.multiply(self.messagesFactorToVar[(factor, var)])
+                res = res.multiply(self.messagesFactorToVar[(factor, var)])
         res = res.normalize()
         return res.val
 
