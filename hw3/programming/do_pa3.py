@@ -176,7 +176,6 @@ def do_part_c():
     plt.title("Plot of the estimated posterior probability P(Yi=1|Y~)")
     plt.ylabel("Probability of Bit Being 1")
     plt.xlabel("Bit Index of Received Message")
-    plt.ylim((0.0, 1.0))
     plt.bar(range(len(G.var)), values)
     plt.savefig('5c', bbox_inches='tight')
     plt.show()
@@ -203,10 +202,11 @@ def do_part_de(numTrials, error, iterations=50):
     y = encodeMessage(x, G)
 
     plt.figure()
-    plt.title("Plot of the Hamming Distance Between MMAP and True Over 10 Trials")
+    plt.title("Plot of the Hamming Distance Between MMAP and True Over 10 "
+              "Trials")
     plt.ylabel("Hamming Distance")
     plt.xlabel("Iteration Number of Loopy Belief Propagation")
-    for trial in range(1):
+    for trial in range(10):
         ##############################################################
         # To do: your code starts here
         yTilde = applyChannelNoise(y, error)
@@ -216,7 +216,6 @@ def do_part_de(numTrials, error, iterations=50):
             G.runParallelLoopyBP(1)
             if it % 10 == 0 and it > 0:
                 print("Finished iteration %s of Loopy" % it)
-            print(G.estimateMarginalProbability(1))
             MMAP = G.getMarginalMAP()
             hamming_distance = np.sum(MMAP)
             values.append(hamming_distance)
@@ -242,28 +241,38 @@ def do_part_fg(error):
     # previous parts.
     original_shape = img.shape
     N = G.shape[1]
-    x = img.flatten()
+    x = img.reshape((N, 1))
     y = encodeMessage(x, G)
     yTilde = applyChannelNoise(y, error)
     G = constructFactorGraph(yTilde, H, error)
     plot_iterations = [0, 1, 2, 3, 5, 10, 20, 30]
+    plt.figure()
     for it in range(31):
         G.runParallelLoopyBP(1)
         if it in plot_iterations:
-            s
+            MMAP = G.getMarginalMAP()
+            imgSampled = MMAP[:N].reshape(original_shape)
+            i = plot_iterations.index(it)
+            plt.subplot(1, 8, i + 1)
+            plt.imshow(imgSampled)
+            plt.title("Sample at iteration: " + str(it))
+    plt.tight_layout()
+    plt.savefig('5fg_error=' + str(int(100*error)), bbox_inches='tight')
+    plt.show()
+    plt.close()
 
 ################################################################
 
 # print('Doing part (a): Should see 0.0, 0.0, >0.0')
 # do_part_a()
 # print('Doing part (c)')
-do_part_c()
-print('Doing part (d)')
-#do_part_de(10, 0.06)
-print('Doing part (e)')
-#do_part_de(10, 0.08)
-#do_part_de(10, 0.10)
+# do_part_c()
+# print('Doing part (d)')
+# do_part_de(10, 0.06)
+# print('Doing part (e)')
+# do_part_de(10, 0.08)
+# do_part_de(10, 0.10)
 print('Doing part (f)')
-# do_part_fg(0.06)
+do_part_fg(0.06)
 print('Doing part (g)')
-# do_part_fg(0.10)
+do_part_fg(0.10)

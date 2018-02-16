@@ -265,9 +265,53 @@ In this case, we note that the maximum is actually achieved for $x_2 = 1$ as the
 \label{fig:conditional_probability_message}
 \end{figure}
 
-In general, the MMAP does not necessarily give us the right answer. We note that in this case, MMAP would again not give us the correct solution since we can verify that the MMAP solution is actually not even a valid codeword (our model assigns it probability $0$).
+It's not visible, but we essentially have a straight line along $0$. In general, the MMAP does not necessarily give us the right answer. We note that in this case, MMAP does give us the correct answer since it seems that with very high likelihood we set every bit to $0$.
 
-\item 
+\item We repeat the experiment from above for 10 random channel noise realizations. The results are showing in Figure \ref{fig:low_epsilon}. We note that it seems as if BP is typically reliable, but if enough bits are different, then we will not converge to the true value (for example, we had one trial were $20$ bits were different, and it seems in this case BP did not find the correct marginal probabilites). The reason for this is likely due to the feedback loop which finds a local optimal that is not near the global optimal.
+
+\begin{figure}[!h]
+\centering
+\includegraphics{programming/5d_epsilon=6.png}
+\caption{Hamming Distance by Iteration Over 10 Values with $\epsilon = 0.06$.}
+\label{fig:low_epsilon}
+\end{figure}
+
+\item We repeat the above for higher error probabilities. We note that the higher error probabilities lead to more frequent scenarios where Loopy BP does not perform well. This further supports our hypothesis that the Loopy BP is good at finding solutions when there is not a large amount of noise in the original realization of the value. See Figure \ref{fig:middle_epsilon} and Figure \ref{fig:high_epsilon} for the plots.
+
+\begin{figure}[!h]
+\centering
+\includegraphics{programming/5d_epsilon=8.png}
+\caption{Hamming Distance by Iteration Over 10 Values with $\epsilon = 0.08$.}
+\label{fig:middle_epsilon}
+\end{figure}
+
+\begin{figure}[!h]
+\centering
+\includegraphics{programming/5d_epsilon=10.png}
+\caption{Hamming Distance by Iteration Over 10 Values with $\epsilon = 0.10$.}
+\label{fig:high_epsilon}
+\end{figure}
+
+
+\item We use our above decoder to show the result replicating MacKay's Fig 47.5. The results are shown in Figure \ref{fig:imaga_reconstruction}.
+
+\begin{figure}[!h]
+\centering
+\includegraphics{programming/5fg_error=6.png}
+\caption{Image Reconstruction with $\epsilon = 0.06$. We plot for 0, 1, 2, 3, 5, 10, 20 ,and 30 iterations}
+\label{fig:imaga_reconstruction}
+\end{figure}
+
+
+\item We repeat the above experiment but with a higher value of $\epsilon=0.10$. We can qualitatively note that our loopy BP algorithm did not converge as well with this amount of noise. See Figure for reference.
+
+\begin{figure}[!h]
+\centering
+\includegraphics{programming/5fg_error=10.png}
+\caption{Image Reconstruction with $\epsilon = 0.10$. We plot for 0, 1, 2, 3, 5, 10, 20 ,and 30 iterations}
+\label{fig:imaga_reconstruction}
+\end{figure}
+
 \end{enumerate}
 
 
