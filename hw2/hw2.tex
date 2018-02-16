@@ -23,7 +23,7 @@ that all of this is my own work.
 \section*{Problem 1}
 
 \begin{enumerate}[label=(\alph*)]
-  \item We can draw the network as follows. We first note that $(A \perp C \mid B) \land (A \perp D \mid B, C) \implies A \perp C,D \mid B)$ (similarly, we can collaps $A \perp D \mid B \land A \perp C \mid B,D \implies A \perp (C,D) \mid B$). We therefore know that observing $B$ must ``block'' any paths from $A$ to both $C$ and $D$. Furthermore, we know that $B \perp D$ and $A \perp D$, so we cannot have $B,D$ or $A,D$ connected. We guess and come up with the network shown in Figure \ref{fig:bayesian_perfect_map}. 
+  \item We can draw the network as follows. We first note that $(A \perp C \mid B) \land (A \perp D \mid B, C) \implies A \perp C,D \mid B)$ (similarly, we can collaps $A \perp D \mid B \land A \perp C \mid B,D \implies A \perp (C,D) \mid B$). We therefore know that observing $B$ must ``block'' any paths from $A$ to both $C$ and $D$. Furthermore, we know that $B \perp D$ and $A \perp D$, so we cannot have $B,D$ or $A,D$ connected. This leads us to the candidate network in Figure \ref{fig:bayesian_perfect_map}. 
 
   \begin{figure}[!h]
   	\centering
@@ -48,7 +48,7 @@ that all of this is my own work.
 		\label{fig:bayesian_perfect_map}
   \end{figure}
 
-  We can then verify that the above network is perfect map of $P$ (ie, it implies only the independences listed in the problem statement. We can do this by simply considering all possible independences. Let our network be defined as $G = (V,E)$:
+  We can then verify that the above network is perfect map of $P$ (ie, it implies only the independences listed in the problem statement). We can do this by simply considering all possible independences. Let our network be defined as $G = (V,E)$:
   \begin{enumerate}
   	\item $(A,B)$: Note that $A \not\perp B \mid \mathcal{S}$ holds for all $\mathcal{S} \subset V$ since we have the edge $A \to B$.
   	\item $(A,C)$: Note that $A \not\perp C$ and $A \not\perp C \mid D$ due to $A \to B \to C$. However, we note that observing $A \perp C \mid B$ and $A \perp C \mid B, D$.
