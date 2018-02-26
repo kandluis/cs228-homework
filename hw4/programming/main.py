@@ -105,6 +105,7 @@ def get_posterior_by_sampling(filename, initialization='same', logfile=None,
   if initialization == 'rand':
     Y[np.where(Y != 0)] = np.random.choice([1, -1], size=((N-2)*(M-2)))
   counts = np.zeros((N, M))
+  frequencyZ_counts = []
 
   def perform_sampling(log_fn):
     MAX_BURNS = 100
@@ -122,12 +123,17 @@ def get_posterior_by_sampling(filename, initialization='same', logfile=None,
         log_fn(t, "B", Y)
 
     for _ in range(MAX_SAMPLES):
+      count_z = 0
       for i in range(1, N-1):
         for j in range(1, M-1):
           if not DUMB_SAMPLE:
-            counts[i][j] += 1 if sample(i, j, Y, X, DUMB_SAMPLE) == 1 else 0
+            count = 1 if sample(i, j, Y, X, DUMB_SAMPLE) == 1 else 0
+            counts[i][j] += count
+            if 125 <= i and i <= 162 and 143 <= j and j <= 174:
+              count_z += count
           else:
             Y[i][j] = sample(i, j, Y, X, DUMB_SAMPLE)
+      frequencyZ_counts.append(count_z)
       t += 1
       if t % 10 == 0:
         print("Completed sample %s from posterior" %
@@ -142,7 +148,7 @@ def get_posterior_by_sampling(filename, initialization='same', logfile=None,
   else:
     perform_sampling(lambda *args: None)
 
-  return counts / float(MAX_SAMPLES), Y, {}
+  return counts / float(MAX_SAMPLES), Y, Counter(frequencyZ_counts)
 
 
 def denoise_image(filename, initialization='rand', logfile=None, DUMB_SAMPLE=0):
@@ -248,12 +254,15 @@ def perform_part_c():
   Run denoise_image function with different initialization and plot out the
   energy functions.
   '''
+  global denoised_20, frequencyZ_20
+
   denoise_image("noisy_20.txt", initialization='rand',
                 logfile='log_rand', DUMB_SAMPLE=0)
   denoise_image("noisy_20.txt", initialization='neg',
                 logfile='log_neg', DUMB_SAMPLE=0)
-  denoise_image("noisy_20.txt", initialization='same',
-                logfile='log_same', DUMB_SAMPLE=0)
+  denoised_20, frequencyZ_20 = denoise_image("noisy_20.txt",
+                                             initialization='same',
+                                             logfile='log_same', DUMB_SAMPLE=0)
 
   # plot out the energy functions
   plot_energy("log_rand")
@@ -266,9 +275,10 @@ def perform_part_d():
   Run denoise_image function with different noise levels of 10% and 20%, and
   report the errors between denoised images and original image
   '''
-  ########
-  # TODO #
-  ########
+  global denoised_10, frequencyZ_10
+  denoised_10, frequencyZ_10 = denoise_image("noisy_10.txt",
+                                             initialization='same',
+                                             logfile=None, DUMB_SAMPLE=0)
 
   # save denoised images and original image to png figures
   convert_to_png(denoised_10, "denoised_10")
@@ -281,9 +291,10 @@ def perform_part_e():
   Run denoise_image function using dumb sampling with different noise levels of
   10% and 20%.
   '''
-  ########
-  # TODO #
-  ########
+  denoised_dumb_10, _ = denoise_image("noisy_10.txt", initialization='same',
+                                      logfile=None, DUMB_SAMPLE=1)
+  denoised_dumb_20, _ = denoise_image("noisy_20.txt", initialization='same',
+                                      logfile=None, DUMB_SAMPLE=1)
 
   # save denoised images to png figures
   convert_to_png(denoised_dumb_10, "denoised_dumb_10")
@@ -295,16 +306,20 @@ def perform_part_f():
   Run Z square analysis
   '''
 
-  d, f = denoise_image('./pa4_data/noisy_10.txt',
-                       initialization='same', logfile='log_same')
+  # d, f = denoise_image('noisy_10.txt',
+  #                     initialization='same', logfile=None)
+  d, f = denoised_10, frequencyZ_10
   width = 1.0
   plt.clf()
   plt.bar(f.keys(), f.values(), width, color='b')
+  plt.savefig('f_10' + '.png')
   plt.show()
-  d, f = denoise_image('./pa4_data/noisy_20.txt',
-                       initialization='same', logfile='log_same')
+  # d, f = denoise_image('noisy_20.txt',
+  #                     initialization='same', logfile=None)
+  d, f = denoised_20, frequencyZ_20
   plt.clf()
   plt.bar(f.keys(), f.values(), width, color='b')
+  plt.savefig('f_20' + '.png')
   plt.show()
 
 
