@@ -18,7 +18,8 @@ def get_energy(Y, X):
   t = 0.0
   N, M = Y.shape
   # Make sure we only count each edge once!
-  return -1*(np.sum(X*Y) + np.sum(Y[:N-1, :]*Y[1:, :] + Y[:, :M-1]*Y[:, 1:]))
+  return -1*(np.sum(X*Y) + np.sum(Y[:N-1, :]*Y[1:, :])
+             + np.sum(Y[:, :M-1]*Y[:, 1:]))
 
 
 def markov_blanket(i, j, Y, X):
