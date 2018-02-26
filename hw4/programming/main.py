@@ -102,10 +102,8 @@ def get_posterior_by_sampling(filename, initialization='same', logfile=None,
     Y = -Y
   if initialization == 'rand':
     Y[np.where(Y != 0)] = np.random.choice([1, -1], size=((N-2)*(M-2)))
-  counts = np.zeros((N, M))
-  frequencyZ_counts = []
-  MAX_BURNS = 10
-  MAX_SAMPLES = 10
+  MAX_BURNS = 100
+  MAX_SAMPLES = 1000
 
   def perform_sampling(log_fn):
     t = 0
@@ -120,6 +118,8 @@ def get_posterior_by_sampling(filename, initialization='same', logfile=None,
           print("Completed burn-in sample %s" % t)
         log_fn(t, "B", Y)
 
+    counts = np.zeros((N, M))
+    frequencyZ_counts = []
     for _ in range(MAX_SAMPLES):
       count_z = 0
       sampled = np.zeros(Y.shape)
@@ -130,7 +130,7 @@ def get_posterior_by_sampling(filename, initialization='same', logfile=None,
             Y[i][j] = sampled[i][j]
       if not DUMB_SAMPLE:
         is_one_in_sample = (sampled == 1)
-        counts += is_one_in_sample
+        counts += (is_one_in_sample)
         count_z = np.sum(is_one_in_sample[125:163, 143:175])
       frequencyZ_counts.append(count_z)
       t += 1
@@ -139,13 +139,15 @@ def get_posterior_by_sampling(filename, initialization='same', logfile=None,
               (t - (0 if DUMB_SAMPLE else MAX_BURNS)))
       log_fn(t, "S", sampled)
 
+    return counts, frequencyZ_counts
+
   if logfile is not None:
     with open(logfile, 'w') as log:
-      perform_sampling(
+      counts, frequencyZ_counts = perform_sampling(
           lambda i, typ, Ys: log.write("\t".join(map(
               str, [i, get_energy(Ys, X), typ])) + "\n"))
   else:
-    perform_sampling(lambda *args: None)
+    counts, frequencyZ_counts = perform_sampling(lambda *args: None)
 
   return counts / float(MAX_SAMPLES), Y, Counter(frequencyZ_counts)
 
