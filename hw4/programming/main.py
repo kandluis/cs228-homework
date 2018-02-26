@@ -117,7 +117,8 @@ def get_posterior_by_sampling(filename, initialization='same', logfile=None,
             Y[i][j] = sample(i, j, Y, X, DUMB_SAMPLE)
 
         t += 1
-        print("Completed burn-in sample %s" % t)
+        if t % 10 == 0:
+          print("Completed burn-in sample %s" % t)
         log_fn(t, "B", Y)
 
     for _ in range(MAX_SAMPLES):
@@ -128,8 +129,9 @@ def get_posterior_by_sampling(filename, initialization='same', logfile=None,
           else:
             Y[i][j] = sample(i, j, Y, X, DUMB_SAMPLE)
       t += 1
-      print("Completed sample %s from posterior" %
-            t - (0 if DUMB_SAMPLE else MAX_BURNS))
+      if t % 10 == 0:
+        print("Completed sample %s from posterior" %
+              (t - (0 if DUMB_SAMPLE else MAX_BURNS)))
       log_fn(t, "S", Y)
 
   if logfile is not None:
