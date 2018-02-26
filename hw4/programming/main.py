@@ -104,8 +104,8 @@ def get_posterior_by_sampling(filename, initialization='same', logfile=None,
     Y[np.where(Y != 0)] = np.random.choice([1, -1], size=((N-2)*(M-2)))
   counts = np.zeros((N, M))
   frequencyZ_counts = []
-  MAX_BURNS = 100
-  MAX_SAMPLES = 1000
+  MAX_BURNS = 10
+  MAX_SAMPLES = 10
 
   def perform_sampling(log_fn):
     t = 0
@@ -122,14 +122,14 @@ def get_posterior_by_sampling(filename, initialization='same', logfile=None,
 
     for _ in range(MAX_SAMPLES):
       count_z = 0
-      sample = np.zeros(Y.shape)
+      sampled = np.zeros(Y.shape)
       for i in range(1, N-1):
         for j in range(1, M-1):
-          sample[i][j] = sample(i, j, Y, X, DUMB_SAMPLE)
+          sampled[i][j] = sample(i, j, Y, X, DUMB_SAMPLE)
           if DUMB_SAMPLE:
-            Y[i][j] = sample[i][j]
+            Y[i][j] = sampled[i][j]
       if not DUMB_SAMPLE:
-        is_one_in_sample = (sample == 1)
+        is_one_in_sample = (sampled == 1)
         counts += is_one_in_sample
         count_z = np.sum(is_one_in_sample[125:163, 143:175])
       frequencyZ_counts.append(count_z)
@@ -137,7 +137,7 @@ def get_posterior_by_sampling(filename, initialization='same', logfile=None,
       if t % 10 == 0:
         print("Completed sample %s from posterior" %
               (t - (0 if DUMB_SAMPLE else MAX_BURNS)))
-      log_fn(t, "S", sample)
+      log_fn(t, "S", sampled)
 
   if logfile is not None:
     with open(logfile, 'w') as log:
