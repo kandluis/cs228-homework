@@ -122,21 +122,22 @@ def get_posterior_by_sampling(filename, initialization='same', logfile=None,
 
     for _ in range(MAX_SAMPLES):
       count_z = 0
+      sample = np.zeros(Y.shape)
       for i in range(1, N-1):
         for j in range(1, M-1):
-          if not DUMB_SAMPLE:
-            count = 1 if sample(i, j, Y, X, DUMB_SAMPLE) == 1 else 0
-            counts[i][j] += count
-            if 125 <= i and i <= 162 and 143 <= j and j <= 174:
-              count_z += count
-          else:
-            Y[i][j] = sample(i, j, Y, X, DUMB_SAMPLE)
+          sample[i][j] = sample(i, j, Y, X, DUMB_SAMPLE)
+          if DUMB_SAMPLE:
+            Y[i][j] = sample[i][j]
+      if not DUMB_SAMPLE:
+        is_one_in_sample = (sample == 1)
+        counts += is_one_in_sample
+        count_z = np.sum(is_one_in_sample[125:163, 143:175])
       frequencyZ_counts.append(count_z)
       t += 1
       if t % 10 == 0:
         print("Completed sample %s from posterior" %
               (t - (0 if DUMB_SAMPLE else MAX_BURNS)))
-      log_fn(t, "S", Y)
+      log_fn(t, "S", sample)
 
   if logfile is not None:
     with open(logfile, 'w') as log:
