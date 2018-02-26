@@ -180,7 +180,85 @@ that all of this is my own work.
 	With the above, we have now a closed form solution.
 \end{enumerate}
 
+\section*{Problem 4}
 
+\begin{enumerate}[label=(\alph*)]
+\item We derive the expression for the condtional probability of the pixel $(i,j)$ is back given its Markov Blanket. In other words, we compute $p(y_{ij} = 1 \mid y_{M_(i,j)})$ where $y_{M(i,j)}$ denotes the Markov blanket. We also introduce the notation $y_{\bar{M}(i,j)}$ to mean all variables not in the Markov blanket and not $y_{ij}$, Note that we have $y_{M(i,j)} = \{x_{ij}, y_{N(i,j)}\}$ where $y_{N(i,j)}$ denotes the neighboring pixels of $y_{i,j}$. Furthermore, let $E \setminus (i,j)$ denote the set of all edges excluding edges where $(i,j)$ is an endpoint. Furthermore, for $((i,j), (i',j')) = e \in E$, denote $e_1 = (i,j)$ and $e_2 = (i',j')$. Wih the above notation out of the way, we have:
+\begin{align*}
+&p(y_{ij} = 1 \mid y_{M(i,j)}) \\
+&= p(y_{ij} = 1 \mid x_{ij}, y_{N(i,j)}) \\
+&= \frac{\sum_{\bar{M}(i,j)} p(y_{ij} = 1, x_{ij}, y_{N(i,j)}, y_{\bar{M}(i,j)}) }{\sum_{y_{ij}}\sum_{\bar{M}(i,j)} p(y_{ij}, x_{ij}, y_{N(i,j)}, y_{\bar{M}(i,j)}} \\
+&= \frac{\frac{1}{Z} \exp[\eta x_{ij}] \prod_{y_{i'j'} \in y_{N(i,j)}} \exp[\beta y_{i'j'}] \sum_{\bar{M}(i,j)}\prod_{n \neq i}\prod_{m \neq j}\exp[\eta y_{nm}x_{nm}] \prod_{e \in E \setminus (i,j)} \exp[\beta y_{e_1}y_{e_2}] }{\frac{1}{Z} \sum_{y_{ij}} \exp[\eta y_{ij}x_{ij}] \prod_{y_{i'j'} \in y_{N(i,j)}} \exp[\beta y_{ij}y_{i'j'}] \sum_{\bar{M}(i,j)}\prod_{n \neq i}\prod_{m \neq j}\exp[\eta y_{nm}x_{nm}] \prod_{e \in E \setminus (i,j)} \exp[\beta y_{e_1}y_{e_2}]} \\
+&= \frac{\exp [\eta x_{ij} + \beta \sum_{y_{i'j'} \in y_{N(i,j)}} y_{i'j'}]}{\exp [\eta x_{ij} + \beta \sum_{y_{i'j'} \in y_{N(i,j)}} y_{i'j'}] + \exp [-\eta x_{ij} - \beta \sum_{y_{i'j'} \in y_{N(i,j)}} y_{i'j'}]} \\
+&= \frac{\exp (2[\eta x_{ij} + \beta \sum_{y_{i'j'} \in y_{N(i,j)}} y_{i'j'}])}{\exp (2[\eta x_{ij} + \beta \sum_{y_{i'j'} \in y_{N(i,j)}} y_{i'j'}]) + 1} \\
+&= \sigma(2\eta x_{ij} + 2\beta\sum_{y_{i'j'} \in y_{N(i,j)}} y_{i'j'})
+\end{align*}
+Where we define $\sigma(x) = \frac{e^x}{1 + e^x}$.
+Being explicity, we have the following two results. For $i \not\in \{1,N\}, j \not\in \{1,M\}$:
+\begin{align*}
+	p(y_{ij} = 1 \mid y_{M(i,j)}) &= p(y_{ij} = 1 \mid y_{i-1, j}, y_{i, j-1}, y_{i+1, j}, y_{i, j + 1}, x_{ij}) \\
+	&= \sigma(2\beta[y_{i-1,j} + y_{i, j-1} + y_{i+1,j}+y_{i,j+1}] + 2\eta x_{ij})
+\end{align*}
+and for $i \in \{1,N\}, j \in \{1, M\}$:
+\begin{align*}
+	p(y_{11} = 1 \mid y_{M(1,1)}) &= p(y_{11} = 1 \mid y_{21}, y_{12}, x_{11}) \\
+	&= \sigma(2\beta[y_{21}+y_{12}] + 2\eta x_{11}) \\
+	p(y_{NM} = 1 \mid y_{M(1,1)}) &= p(y_{NM} = 1 \mid y_{N-1, M}, y_{N, M-1}, x_{NM}) \\
+	&= \sigma(2\beta[y_{N-1, M}+y_{N, M-1}] + 2\eta x_{NM}) \\
+	p(y_{1M} = 1 \mid y_{M(1,M)}) &= p(y_{1M} = 1 \mid y_{1, M-1}, y_{2M}, x_{1M}) \\
+	&= \sigma(2\beta[y_{1, M-1} + y_{2M}] + 2\eta x_{1M}) \\
+	p(y_{N1} = 1 \mid y_{M(N,1)}) &= p(y_{N1} = 1 \mid y_{N-1, 1}, y_{N2}, x_{N1}) \\
+	&= \sigma(2\beta[y_{N-1,1} +y_{N2}] + 2\eta x_{N1}) \\
+	p(y_{1j} = 1 \mid y_{M(1,j)}) &= p(y_{1j} = 1 \mid y_{2j}, y_{1,j+1}, y_{1, j-1} x_{1j}) \\
+	&= \sigma(2\beta[y_{2j}+y_{1,j+1} + y_{1, j-1}] + 2\eta x_{1j}) \tag{$j \neq 1,M$} \\
+	p(y_{i1} = 1 \mid y_{M(i,1)}) &= p(y_{i1} = 1 \mid y_{i-1, 1}, y_{i+1, 1}, y_{i, 2}, x_{i1}) \\
+	&= \sigma(2\beta[y_{i-1, 1}+y_{i+1, 1} + y_{i,2}] + 2\eta x_{i1} \tag{$i \neq 1, N$}) \\
+	p(y_{iM} = 1 \mid y_{M(i,M)}) &= p(y_{iM} = 1 \mid y_{i, M-1}, y_{i+1, M}, y_{i-1, M}, x_{iM}) \\
+	&= \sigma(2\beta[y_{i, M-1} + y_{i+1, M} + y_{i-1, M}] + 2\eta x_{iM}) \tag{$i \neq 1, N$} \\
+	p(y_{Nj} = 1 \mid y_{M(N,j)}) &= p(y_{Nj} = 1 \mid y_{N-1, j}, y_{N, j+1}, y_{N, j-1}, x_{Nj}) \\
+	&= \sigma(2\beta[y_{N-1,j} +y_{N, j+1} + y_{N, j - 1}] + 2\eta x_{Nj}) \tag{$j \neq 1, M$}
+\end{align*}
+
+\item We outline the Gibbs sampling algorithm in pseudo-code that samples from $p(\vect{y} \mid \vect{x})$.
+	\begin{itemize}
+		\item Set $\vect{x}$ to the observed values. 
+		\item Initialize $\vect{y}$ to be equal to $\vect{x}$ (in theory, we could use any initialization, but it seems ``sensible'' to start with a ``good'' guess -- in this case, the corrupted image should be ``close'' to the real image, so it's a decent guess to start).
+		\item For $B$ steps:
+			\begin{itemize}
+				\item For $i \gets 1$ to $i = N$
+				 	\begin{itemize}
+				 		\item For $j \gets 1$ to $i = M$
+				 			\begin{itemize}
+				 				\item Compute $2\eta \vect{x}_{ij} + 2\beta\sum_{\vect{y}_{i'j'} \in \vect{y}_{N(i,j)}} \vect{y}_{i'j'}$. This can be done by summing the values of each neighbor of pixel $(i,j)$ (according to $\vect{y}$), doubling the result and multiplying by $\beta$, and then adding the value of $2\eta x_{ij}$. Note that each pixel has at most four neighbors, so this calculation takes a constant amount of work.
+				 				\item Run the result from above through the $\sigma$ function -- again, this takes constant time. Let this result be $p_{ij}$.
+				 				\item Generate a random sample $r \sim Uniform(0,1)$.
+				 				\item If $r \leq p_{ij}$, update $\vect{y}_{ij} = 1$. Otherwise, set $\vect{y}_{ij} = -1$. Note that we do a mutation of $\vect{y}$, so this value will persist.
+				 			\end{itemize}
+				 	\end{itemize}
+			\end{itemize}
+		\item Repeat for $s \geq 1$ to $S$:
+			\begin{itemize}
+				\item Allocate space for $\vect{y[s]}$ (ie, a vector of size $NxM$).
+				\item For $i \gets 1$ to $i = N$
+				 	\begin{itemize}
+				 		\item For $j \gets 1$ to $i = M$
+				 			\begin{itemize}
+				 				\item Repeat the corresponding first three steps from above to generate $r, p_{ij}$. Note that we still use $\vect{x}$ and $\vect{y}$.
+				 				\item If $r \leq p_{ij}$, set $\vect{y[s]}_{ij} = 1$. Otherwise, set $\vect{y[s]}_{ij} = -1$. We do NOT mutate $\vect{y}$ (though, technically, since we're assuming we've converged, mutating it should not make a difference)
+				 			\end{itemize}
+				 	\end{itemize}
+			\end{itemize}
+		\item Return the $S$ samples $\vect{y[s]}$ generated above.
+	\end{itemize}
+
+	We note that by construction, the stationary distribution of our Markov Process above is $p(\vect{y} \mid \vect{x})$. Therefore, it is straightforward to ensure that the above process will actually generate samples from $p(\vect{y} \mid \vect{x})$ for large enough values of $B$. We simply need to ensure that the chain is ergodic to guarantee convergence.
+
+	We note that to ensure irreducibility, we simply need to guarantee that we can potentially move to any state of the vector $\vect{y}$. We note that this immediately follows from the fact that $p(y_{ij} = 1 \mid y_{M(i,j)}) = \sigma(...)$, since this guarantees that $0 < p(y_{ij} = 1 \mid y_{M(i,j)}) < 1$. Therefore it is possible to transition from any state $\vect{y}$ to any other state $\vect{y}'$.
+
+	To ensure the chain is aperiodic, we note that for any state $\vect{y}$, there is always a non-zero probability that we will change non of its values (for similar reasons outlined above), and therefore the chain has a period of $1$ (aperiodic).
+
+	With the above, we know the chain is ergodic, and therefore by construction, we know that the equilibrium distribution is in fact the posterior distributions $p(\vect{y} \mid \vect{x})$.
+\end{enumerate}
 
 
 
