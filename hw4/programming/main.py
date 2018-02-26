@@ -193,11 +193,11 @@ def plot_energy(filename):
     for line in f:
       it, en, phase = line.strip().split()
       if phase == 'B':
-        its_burn.append(it)
-        energies_burn.append(en)
+        its_burn.append(float(it))
+        energies_burn.append(float(en))
       elif phase == 'S':
-        its_sample.append(it)
-        energies_sample.append(en)
+        its_sample.append(float(it))
+        energies_sample.append(float(en))
       else:
         print("bad phase: -%s-" % phase)
 
