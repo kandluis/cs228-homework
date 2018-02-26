@@ -18,10 +18,7 @@ def get_energy(Y, X):
   t = 0.0
   N, M = Y.shape
   # Make sure we only count each edge once!
-  for i in range(N-1):
-    for j in range(M-1):
-      t += (Y[i][j]*Y[i+1][j] + Y[i][j]*Y[i][j+1])
-  return -1*(np.sum(X*Y) + t)
+  return -1*(np.sum(X*Y) + np.sum(Y[:N-1, :]*Y[1:, :] + Y[:, :M-1]*Y[:, 1:]))
 
 
 def markov_blanket(i, j, Y, X):
@@ -279,6 +276,7 @@ def perform_part_d():
   denoised_10, frequencyZ_10 = denoise_image("noisy_10.txt",
                                              initialization='same',
                                              logfile=None, DUMB_SAMPLE=0)
+  orig_img = read_txt_file("orig_img.txt")
 
   # save denoised images and original image to png figures
   convert_to_png(denoised_10, "denoised_10")
