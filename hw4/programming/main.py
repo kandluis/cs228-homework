@@ -104,10 +104,10 @@ def get_posterior_by_sampling(filename, initialization='same', logfile=None,
     Y[np.where(Y != 0)] = np.random.choice([1, -1], size=((N-2)*(M-2)))
   counts = np.zeros((N, M))
   frequencyZ_counts = []
+  MAX_BURNS = 100
+  MAX_SAMPLES = 1000
 
   def perform_sampling(log_fn):
-    MAX_BURNS = 100
-    MAX_SAMPLES = 1000
     t = 0
     if not DUMB_SAMPLE:
       for _ in range(MAX_BURNS):
@@ -277,7 +277,7 @@ def perform_part_d():
   denoised_10, frequencyZ_10 = denoise_image("noisy_10.txt",
                                              initialization='same',
                                              logfile=None, DUMB_SAMPLE=0)
-  orig_img = read_txt_file("orig_img.txt")
+  orig_img = read_txt_file("orig.txt")
 
   # save denoised images and original image to png figures
   convert_to_png(denoised_10, "denoised_10")
