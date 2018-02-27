@@ -258,54 +258,18 @@ and for $i \in \{1,N\}, j \in \{1, M\}$:
 	To ensure the chain is aperiodic, we note that for any state $\vect{y}$, there is always a non-zero probability that we will change non of its values (for similar reasons outlined above), and therefore the chain has a period of $1$ (aperiodic).
 
 	With the above, we know the chain is ergodic, and therefore by construction, we know that the equilibrium distribution is in fact the posterior distributions $p(\vect{y} \mid \vect{x})$.
+
+\item We implement the above algorutnm and apply it to the image with $20\%$, using values of $\eta = 1, \beta = 1, B = 100, S = 1000$. On each iteration, we compute $E(\vect{y}, \vect{x})$. We run the algorithm with three distinct initializations of $y_ij$. (1) same as $x_{ij}$, (2) negative of $x_{ij}$ and (3) random. We plot these values in Figure \ref{fig:log_energies}.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.5]{programming/log_same.png}
+\includegraphics[scale=0.5]{programming/log_neg.png}
+\includegraphics[scale=0.5]{programming/log_rand.png}
+\caption{t}
+\label{fig:log_energies}
+\end{figure}
+
+From the figure, we can tell that all three initializations appear to be converging to the same energy region in the posterior (some state with $E(\vect{x}, \vect{y}) \approxeq -214000$.
 \end{enumerate}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 \end{document}

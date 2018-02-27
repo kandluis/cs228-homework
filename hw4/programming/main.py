@@ -281,6 +281,7 @@ def perform_part_d():
                                              initialization='same',
                                              logfile=None, DUMB_SAMPLE=0)
   orig_img = read_txt_file("orig.txt")
+  orig_img = .5 * (1 - orig_img)
 
   # save denoised images and original image to png figures
   convert_to_png(denoised_10, "denoised_10")
