@@ -288,13 +288,13 @@ def perform_part_d():
   convert_to_png(denoised_20, "denoised_20")
   convert_to_png(orig_img, "orig_img")
 
-  N, M = orig_img.size
-  denoised_10_match = (original == denoised_10)[1:N-1, 1:M-1]
-  denoised_20_match = (original == denoised_20)[1:N-1, 1:M-1]
-  print("Quality of Restotoration from %s%% noise: %s." %
-        (10, (original == denoised_10)[1:N-1, 1:M-1] / float((N-1) * (M-1))))
-  print("Quality of Restotoration from %s%% noise: %s." %
-        (20, (original == denoised_20)[1:N-1, 1:M-1] / float((N-1) * (M-1))))
+  N, M = orig_img.shape
+  print("restoration error from %s noise: %s." %
+        (10, np.sum((orig_img != denoised_10)[1:N-1, 1:M-1]) / float(
+            (N-1) * (M-1))))
+  print("restoration error from %s noise: %s." %
+        (20, np.sum((orig_img != denoised_20)[1:N-1, 1:M-1]) / float(
+            (N-1) * (M-1))))
 
 
 def perform_part_e():
@@ -302,6 +302,9 @@ def perform_part_e():
   Run denoise_image function using dumb sampling with different noise levels of
   10% and 20%.
   '''
+  orig_img = read_txt_file("orig.txt")
+  orig_img = .5 * (1 - orig_img)
+
   denoised_dumb_10, _ = denoise_image("noisy_10.txt", initialization='same',
                                       logfile=None, DUMB_SAMPLE=1)
   denoised_dumb_20, _ = denoise_image("noisy_20.txt", initialization='same',
@@ -310,6 +313,14 @@ def perform_part_e():
   # save denoised images to png figures
   convert_to_png(denoised_dumb_10, "denoised_dumb_10")
   convert_to_png(denoised_dumb_20, "denoised_dumb_20")
+
+  N, M = orig_img.shape
+  print("restoration error from %s%% noise: %s." %
+        (10, np.sum((orig_img != denoised_dumb_10)[1:N-1, 1:M-1]) / float(
+            (N-1) * (M-1))))
+  print("restoration error from %s%% noise: %s." %
+        (20, np.sum((orig_img != denoised_dumb_20)[1:N-1, 1:M-1]) / float(
+            (N-1) * (M-1))))
 
 
 def perform_part_f():
