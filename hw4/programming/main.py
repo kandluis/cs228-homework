@@ -288,6 +288,14 @@ def perform_part_d():
   convert_to_png(denoised_20, "denoised_20")
   convert_to_png(orig_img, "orig_img")
 
+  N, M = orig_img.size
+  denoised_10_match = (original == denoised_10)[1:N-1, 1:M-1]
+  denoised_20_match = (original == denoised_20)[1:N-1, 1:M-1]
+  print("Quality of Restotoration from %s%% noise: %s." %
+        (10, (original == denoised_10)[1:N-1, 1:M-1] / float((N-1) * (M-1))))
+  print("Quality of Restotoration from %s%% noise: %s." %
+        (20, (original == denoised_20)[1:N-1, 1:M-1] / float((N-1) * (M-1))))
+
 
 def perform_part_e():
   '''

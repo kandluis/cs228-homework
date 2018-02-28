@@ -270,6 +270,6 @@ and for $i \in \{1,N\}, j \in \{1, M\}$:
 \label{fig:log_energies}
 \end{figure}
 
-From the figure, we can tell that all three initializations appear to be converging to the same energy region in the posterior (some state with $E(\vect{x}, \vect{y}) \approxeq -214000$.
+From the figure, we can tell that all three initializations appear to be converging to the same energy region in the posterior (some state with $E(\vect{x}, \vect{y}) \approxeq -214000$. The burn-in appears to be adequate in length for all of the initializations -- especially the ``same'' and ``random''. The ``negative'' initialization is the one where there might be some additional benefit to increases $S$, but the very last few iterations already appear to have converged. The burn-in appears to be adequate in length, as there's a sharp decrease in enery that appears to level towards the end. We can see that there's substantial mixing only in the ``same'' initialization -- this continues when sampling, which appears to be a good sign since we are sampling the entire posterior instead of having just a single mode. For ``rand'' and ``neg'' initializations, it appears that the chain is not mixing as well. We see very little fluctiation from iteration to iteration once convergence is achieved. Intuitively, this likely means that we're sampling from a single mode, rather than the entire distribution over $p$.
 \end{enumerate}
 \end{document}
