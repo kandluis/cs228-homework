@@ -72,6 +72,7 @@ that all of this is my own work.
 	which means we will never move to a different configuration. Basically, leaving all $C_i$ fixed but one necessarily forces that $C_i$ to be the only unassigned value. We could modify Gibbs sampling so that we leave all $C_i$ fixed except $2$, but this is not the typical proposal distribution people have in mind when they discuss Gibbs sampling.
 \end{enumerate}
 
+\pagebreak
 \section*{Problem 2}
 
 \begin{enumerate}[label=(\alph*)]
@@ -83,8 +84,8 @@ that all of this is my own work.
   \end{align*}
   Let us define the following, to simplify notation:
   \begin{align*}
-  	Z_{\vect{y}^m} &= \sum_{\vect{x}} \exp\left(\sum_{i =1}^n \theta_i f_i(\vect{x}_i, \vect{y}^m_i)\right) \\
-  	Z_{\vect{x}^m} &= \sum_{\vect{y}} \exp\left(\sum_{i =1}^n \theta_i f_i(\vect{x^m}_i, \vect{y}_i)\right) \\
+  	Z_{\vect{y}^m} &= \sum_{\vect{x}} \exp\left(\sum_{i =1}^n \theta_i f_i(\vect{x}_i, \vect{y}^m_i)\right) = Z\sum_{\vect{x}} P(\vect{x}, \vect{y}) \\
+  	Z_{\vect{x}^m} &= \sum_{\vect{y}} \exp\left(\sum_{i =1}^n \theta_i f_i(\vect{x^m}_i, \vect{y}_i)\right) = Z\sum_{\vect{y}} P(\vect{x}, \vect{y}) \\
   	Z &= \sum_{\vect{x}, \vect{y}} \exp\left(\sum_{i=1}^n \theta_i f_i(\vect{x}_i, \vect{y}_i)\right)
   \end{align*}
   Now, let us focus on one part of the above (the other can be similarly simplified). 
@@ -114,12 +115,12 @@ that all of this is my own work.
   \begin{align*}
   	\frac{\partial \log Z_{\vect{y}^m}}{\partial \theta_i} &= \frac{1}{Z_{\vect{y}^m}} \sum_{\vect{x}} \frac{\partial}{\partial \theta_i} \exp\left(\sum_{i =1}^n \theta_i f_i(\vect{x}_i, \vect{y}^m_i)\right) \\
   	&= \frac{1}{Z_{\vect{y}^m}} \sum_{\vect{x}} f_i(\vect{x}_i, \vect{y}_i^m) \exp\left(\sum_{i =1}^n \theta_i f_i(\vect{x}_i, \vect{y}^m_i)\right)  \\
-  	&= Z \sum_{\vect{x}} f_i(\vect{x}_i, \vect{y}_i^m) \frac{\exp\left(\sum_{i =1}^n \theta_i f_i(\vect{x}_i, \vect{y}^m_i)\right) }{Z Z_{\vect{y}^m}} \\
-  	&= ZE_{P_{\vect{\theta}}(\vect{X} \mid \vect{Y} = \vect{y}^{m})}[f_i(\vect{x}_i, \vect{y}_i^m)]
+  	&= \sum_{\vect{x}} f_i(\vect{x}_i, \vect{y}_i^m) \frac{\exp\left(\sum_{i =1}^n \theta_i f_i(\vect{x}_i, \vect{y}^m_i)\right) }{Z_{\vect{y}^m}} \\
+  	&= E_{P_{\vect{\theta}}(\vect{X} \mid \vect{Y} = \vect{y}^{m})}[f_i(\vect{x}_i, \vect{y}_i^m)]
   \end{align*}
   Similarly, we have:
   $$
-  	\frac{\partial\log Z_{\vect{x}^m}}{\partial \theta_i}  = ZE_{P_{\vect{\theta}}(\vect{Y} \mid \vect{X} = \vect{x}^{m})}[f_i(\vect{x}_i^m, \vect{y}_i)]
+  	\frac{\partial\log Z_{\vect{x}^m}}{\partial \theta_i}  = E_{P_{\vect{\theta}}(\vect{Y} \mid \vect{X} = \vect{x}^{m})}[f_i(\vect{x}_i^m, \vect{y}_i)]
   $$
   And lastly, we have:
   \begin{align*}
@@ -133,22 +134,22 @@ that all of this is my own work.
   	\frac{\partial }{\partial \theta_i}g(\vect{\theta};D) &= -M\frac{\partial }{\partial \theta_i} \log Z + \sum_{m=1}^M\left[ \sum_{i=1}^n \frac{\partial }{\partial \theta_i} \theta_i f_i(\vect{x}_i^m, \vect{y}_i^m) - (1-\alpha)\frac{\partial }{\partial \theta_i} \log Z_{\vect{y}^m} - \alpha \frac{\partial }{\partial \theta_i}\log Z_{\vect{x}^m} \right] \\
   	&= \sum_{i=1}^M f_i(\vect{x}_i^m, \vect{y}_i^m) \\
   	&- ME_{P_{\vect{\theta}}(\vect{X}, \vect{Y})}[f_i(\vect{x}_i, \vect{y}_i)] \\
-  	&- Z(1-\alpha)\sum_{m=1}^M E_{P_{\vect{\theta}}(\vect{X} \mid \vect{Y} = \vect{y}^{m})}[f_i(\vect{x}_i, \vect{y}_i^m)] \\
-  	&- Z\alpha\sum_{m=1}^M E_{P_{\vect{\theta}}(\vect{Y} \mid \vect{X} = \vect{x}^{m})}[f_i(\vect{x}_i^m, \vect{y}_i)] \\
+  	&- (1-\alpha)\sum_{m=1}^M E_{P_{\vect{\theta}}(\vect{X} \mid \vect{Y} = \vect{y}^{m})}[f_i(\vect{x}_i, \vect{y}_i^m)] \\
+  	&- \alpha\sum_{m=1}^M E_{P_{\vect{\theta}}(\vect{Y} \mid \vect{X} = \vect{x}^{m})}[f_i(\vect{x}_i^m, \vect{y}_i)] \\
   	&= M\hat{E}[f_i(\vect{x}_i^m, \vect{y}_i^m)] \tag{Sample Mean} \\
   	&- ME_{P_{\vect{\theta}}(\vect{X}, \vect{Y})}[f_i(\vect{x}_i, \vect{y}_i)] \tag{True Mean}\\
-  	&- Z(1-\alpha)\sum_{m=1}^M E_{P_{\vect{\theta}}(\vect{X} \mid \vect{Y} = \vect{y}^{m})}[f_i(\vect{x}_i, \vect{y}_i^m)] \tag{Conditional Expectation $X \mid Y$}\\
-  	&- Z\alpha\sum_{m=1}^M E_{P_{\vect{\theta}}(\vect{Y} \mid \vect{X} = \vect{x}^{m})}[f_i(\vect{x}_i^m, \vect{y}_i)] \tag{Condtional Expectation $Y \mid X$}
+  	&- (1-\alpha)\sum_{m=1}^M E_{P_{\vect{\theta}}(\vect{X} \mid \vect{Y} = \vect{y}^{m})}[f_i(\vect{x}_i, \vect{y}_i^m)] \tag{Conditional Expectation $X \mid Y$}\\
+  	&- \alpha\sum_{m=1}^M E_{P_{\vect{\theta}}(\vect{Y} \mid \vect{X} = \vect{x}^{m})}[f_i(\vect{x}_i^m, \vect{y}_i)] \tag{Condtional Expectation $Y \mid X$}
   \end{align*}
 \end{enumerate}
 
-
+\pagebreak
 \section*{Problem 3}
 
 \begin{enumerate}[label=(\alph*)]
 	\item We show that the EM algorithm converges in one iteration and we give a closed form expression for the parameter values at this point. In other words, we give a closed form expressions for $\theta_c^1$ and $\theta^1_{x_i} \mid c$. We initialize the algorithm by setting:
 	$$
-		\theta_c^0 = \frac{1}{|Val(C)|}, \theta_{x_i \mid c}^0 = \frac{1}{|Val(X_i|}
+		\theta_c^0 = \frac{1}{|Val(C)|}, \theta_{x_i \mid c}^0 = \frac{1}{|Val(X_i)|}
 	$$
 	In our case, the missing data is $c$, therefore, we begin with the $E$ step where we ``hallucinate'' the possible values of $c$ given each of our training examples. For each example $\vect{x}[m]$, we compute:
 	\begin{align*}
@@ -162,24 +163,51 @@ that all of this is my own work.
 	\end{align*}
 	The next step is simply to maximize the expectation of the log likelihood over these ``hallucinated'' values for each data point. That is to say, we have the objective function:
 	\begin{align*}
-		f(\theta) &= \sum_{m=1}^M E_{Q^1(C = c[m] \mid X = x[m])}[\log p(x[m], c[m]; \theta)] \\
-		&= \sum_{m=1}^M E_{c[m] \sim Uniform(\frac{1}{|Val(C)|})}[\log p(x[m], c[m]; \theta)] 
+		f^1(\theta) &= \sum_{m=1}^M E_{Q^1(C = c \mid X = x[m])}[\log P(x[m], c; \theta)] \\
+		&= \sum_{m=1}^M E_{c \sim Uniform(\frac{1}{|Val(C)|})}[\log P(x[m], c; \theta)] \\
+    &= \frac{1}{|Val(C)|}\sum_{m=1}^M\sum_{c} \log P(x[m], c; \theta) \\
+    &= \frac{1}{|Val(C)|}\sum_{m=1}^M\sum_{c} [\log \theta_c + \sum_{i=1}^n \log \theta_{x[m]_i \mid c}] \\
+    &= \frac{M}{|Val(C)|}\sum_{c} \log \theta_c + \frac{1}{|Val(C)|}\sum_{m=1}^M\sum_c\sum_{i=1}^n \log \theta_{x[m]_i \mid c}
 	\end{align*}
 	And we wish to compute:
 	$$
-		\theta_1 = \arg\max_{\theta} f(\theta)
+		\theta^1 = \arg\max_{\theta} f^1(\theta)
 	$$
 	subject to the constraints $\sum_{c} \theta_c = 1$ and $\forall c, \sum_{x_i} \theta_{x_i \mid c} = 1$.
-	From lecture, we know that the above is maximized by the parameters:
-	\begin{align*}
-		\theta_c &= 
-		\frac{1}{M}\sum_{m=1}^M \sum_{\hat{c}[m]} \mathbbm{1}[\hat{c[m]} = c]
-		\\
-		\theta_{x_i \mid c} &= \frac{\sum_{m=1}^M \sum_{\hat{c}[m]} \mathbbm{1}[c[m] = x, x[m]_i = x_i] }{\sum_{m=1}^M \sum_{\hat{c}[m]} \mathbbm{1}[c[m] = x]}
-	\end{align*}
-	With the above, we have now a closed form solution.
+
+  We can do the above by taking derivates and setting equal to the derivate of the lagrange constraints (represented by $\mathcal{L})$. This gives us $|Val(C)| + 1$ equations on $|Val(C) + 1|$ variables of the form:
+  \begin{align*}
+    \frac{\partial}{\partial \theta_c} \mathcal{L}(\theta. \lambda) &=  \frac{M}{|Val(C)|}\frac{1}{\theta_c} - \lambda_0 = 0\\
+    \frac{\partial}{\partial \lambda_0} \mathcal{L}(\theta, \lambda) &=1- \sum_{c}\theta_c = 0 \\
+    \implies \frac{M}{|Val(C)|}\sum_c \frac{1}{\lambda_0} &= 1 \\
+    \implies \lambda_0 &= M \\
+    \implies \theta_c^1 &= \frac{1}{|Val(C)|}
+  \end{align*}
+  We note that this leaves the distribution over $c$ unchanged. We can do something similar for each of the $\theta_{x[m]_i \mid c}$. We first note that:
+  $$
+    \sum_{m=1}^M \sum_c \sum_{i=1}^n \log \theta_{x[m]_i \mid c} = \sum_c \sum_{i=1}^n N_{\mathcal{D}}(x_i) \log\theta_{x_i \mid c}
+  $$
+  Where $N_{\mathcal{D}}(x_i)$ is simply the number of times that the value $x_i$ appears in our dataset $\mathcal{D}$. With the above, we have for each $c \in C$ a total of $|Val(X)| + 1$ equations on $|Val(X)| + 1$ unknowns, as below:
+  \begin{align*}
+    \frac{\partial}{\partial \theta_{x_i \mid c}} \mathcal{L}(\theta, \lambda) &= \frac{N_{\mathcal{D}}(x_i)}{|Val(C)|} \frac{1}{\theta_{x_i \mid c}} - \lambda_c = 0 \\
+    \frac{\partial}{\partial \lambda_c} &= 1 - \sum_{x_i} \theta_{x_i \mid c} = 0 \\
+    \implies \frac{1}{|Val(C)|}\sum_{x_i} N_{\mathcal{D}}(x_i)\frac{1}{\lambda_c} &= 1 \\
+    \implies \lambda_c &= \frac{M}{|Val(C)|} \\
+    \implies \theta_{x_i \mid c}^1 &= \frac{N_{\mathcal{D}(x_i)}}{M} = \frac{\sum_{m=1}^M \mathbbm{1}[x[m]_x == x_i]}{M}
+  \end{align*}
+  Which means we basically update $\theta_{x_i \mid c}$ to be equal to precisely the proportion of occurrences of $x_i$ in the data $\mathcal{D}$.
+
+  We claim that the above is the convergence point for the algorithm. To see this, suppose we attempted to do an $E$ step, with our updated values of $\theta^1_{x_i \mid c}$. Then the very first thing to note is that $\theta^1_{x_i} \mid c$ do not depend, on any way, in the value of $c$. Therefore, we'll have:
+  \begin{align*}
+    Q^2(C = c \mid X = x[m]) &= \frac{P(X = x[m] \mid C = c; \theta^1)P(C=c; \theta^1)}{\sum_{c'} P(X = x[m] \mid C=c'; \theta^1)} \\
+    &= \frac{P(X = x[m]; \theta^1)P(C = c;\theta^1_c)}{P(X = x[m])\sum_c P(C = c; \theta^1_c)} \tag{Since our $P(X = x[m])$ does not depend on the value of $c$} \\
+    &= \frac{1}{|Val(C)|}
+  \end{align*}
+  We therefore have $Q^2((C = c \mid X = x[m]) = Q^1(C = c \mid X = x[m])$, which implies that $f^2 = f^1$ (since the data does not change). Therefore, we will have $theta^2 = \theta^1$. We therefore note that with this initiaization, the algorithm converges in one step and has the final paramters as specified previously.
+
 \end{enumerate}
 
+\pagebreak
 \section*{Problem 4}
 
 \begin{enumerate}[label=(\alph*)]
@@ -261,15 +289,67 @@ and for $i \in \{1,N\}, j \in \{1, M\}$:
 
 \item We implement the above algorutnm and apply it to the image with $20\%$, using values of $\eta = 1, \beta = 1, B = 100, S = 1000$. On each iteration, we compute $E(\vect{y}, \vect{x})$. We run the algorithm with three distinct initializations of $y_ij$. (1) same as $x_{ij}$, (2) negative of $x_{ij}$ and (3) random. We plot these values in Figure \ref{fig:log_energies}.
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
 \centering
 \includegraphics[scale=0.5]{programming/log_same.png}
 \includegraphics[scale=0.5]{programming/log_neg.png}
 \includegraphics[scale=0.5]{programming/log_rand.png}
-\caption{t}
+\caption{Enery Value per Iteration for Three Distinct Initializations.}
 \label{fig:log_energies}
 \end{figure}
 
 From the figure, we can tell that all three initializations appear to be converging to the same energy region in the posterior (some state with $E(\vect{x}, \vect{y}) \approxeq -214000$. The burn-in appears to be adequate in length for all of the initializations -- especially the ``same'' and ``random''. The ``negative'' initialization is the one where there might be some additional benefit to increases $S$, but the very last few iterations already appear to have converged. The burn-in appears to be adequate in length, as there's a sharp decrease in enery that appears to level towards the end. We can see that there's substantial mixing only in the ``same'' initialization -- this continues when sampling, which appears to be a good sign since we are sampling the entire posterior instead of having just a single mode. For ``rand'' and ``neg'' initializations, it appears that the chain is not mixing as well. We see very little fluctiation from iteration to iteration once convergence is achieved. Intuitively, this likely means that we're sampling from a single mode, rather than the entire distribution over $p$.
+
+\item We restore the noisy images (10\% and 20\% noise) and present the results in Figure \ref{fig:denoised_10} (for 10\%) and Figure \ref{fig:denoised_20} (for 20\%). For the 10\$, we achieve restoration error of 0.65102796965765515\%. For the 20\% we achieve a restoration error of 1.2810173334735907\%.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[scale=0.33]{programming/orig.png}
+\includegraphics[scale=0.33]{programming/noisy_10.png}
+\includegraphics[scale=0.33]{programming/denoised_10.png}
+\caption{Results of denoising a noisy image. The left-most figure is the original, the middle image has each pixel flipped in color with ten-percent chance, and the right-most image is the denoised image (using the algorithm from above).}
+\label{fig:denoised_10}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[scale=0.33]{programming/orig.png}
+\includegraphics[scale=0.33]{programming/noisy_20.png}
+\includegraphics[scale=0.33]{programming/denoised_20.png}
+\caption{Results of denoising a noisy image. The left-most figure is the original, the middle image has each pixel flipped in color with twenty-percent chance, and the right-most image is the denoised image (using the algorithm from above).}
+\label{fig:denoised_20}
+\end{figure}
+
+\item We repeat the process from above but using the dumb restoration process. The results are in Figure \ref{fig:denoised_dumb_10} (for 10\%) and Figure \ref{fig:denoised_dumb_20} (for 20\%). For the 10\%, we achieve restoration error of 0.7246630901036736\%. For the 20\% we achieve a restoration error of 2.2967144710543848\%. The Gibbs sampler appears to do much better than the dumb method. The reason for this is likely due to the deterministic nature of the dumn method -- it simply takes the majority from the neighbors. Therefore, with enough noise, it's very difficult to get rid of the black pixels since a large number of the neighbors will also be black.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[scale=0.33]{programming/orig.png}
+\includegraphics[scale=0.33]{programming/noisy_10.png}
+\includegraphics[scale=0.33]{programming/denoised_dumb_10.png}
+\caption{Results of denoising a noisy image using the dumb method. The left-most figure is the original, the middle image has each pixel flipped in color with ten-percent chance, and the right-most image is the denoised image.}
+\label{fig:denoised_dumb_10}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[scale=0.33]{programming/orig.png}
+\includegraphics[scale=0.33]{programming/noisy_20.png}
+\includegraphics[scale=0.33]{programming/denoised_dumb_20.png}
+\caption{Results of denoising a noisy image using the dumb method. The left-most figure is the original, the middle image has each pixel flipped in color with twenty-percent chance, and the right-most image is the denoised image.}
+\label{fig:denoised_dumb_20}
+\end{figure}
+
+\item We use the Gibbs sampler to estimate the posterior for the number of pizels the letter $z$ takes up. The resulting histograms are shown in Figure \ref{fig:frequency_z}. We note that the two distributions are different in a few ways. First, the means are lower for the 10\% reconstruction. Similary, the min and max are also lower for the 10\% reconstruction. This makes a lot of sense since the reconstruction is closer to the original, which means it more accurately measures the Z without any noisy whie pixels (ie, white pixels turned black). We would expect the noisier image to have more black. Furthermore, we note that the noiser version of the distribution is smoother (appears a bit more normal). I suspect this is due to the fact that the image is noiser, so the distribution of pixels is more normal.
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.5]{programming/f_10.png}
+\includegraphics[scale=0.5]{programming/f_20.png}
+\caption{Distribution of number of black pixels in the "Z" region. The left figure is for the reconstruction from the ten percent corrupted image and the right figure is for the reconstruction from the twenty percent reconstructed image.}
+\label{fig:frequency_z}
+\end{figure}
+
+
 \end{enumerate}
 \end{document}
