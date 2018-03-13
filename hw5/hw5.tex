@@ -98,9 +98,109 @@ that all of this is my own work.
 
 \section*{Problem 2}
 
-\begin{enumerate}[label=(\alph*)]
-  \item (your solution)
-  \item (your solution)
+\begin{enumerate}[label=(\Alph*)]
+  \item Gaussian Mixture model
+  	\begin{enumerate}[label=(\roman*)]
+  		\item We can estimate the parameters for our mixture model relatively straight-forward, given the hidden variables $z_ij$. In fact, note that we have the log likelihood over our samples as (WLOG, we number the $5$ known precints as $i=1,\cdots,5$ and we set $\theta = (\pi, mu_0, mu_1, \Sigma_0, \Sigma_1)$.
+  		\begin{align*}
+  			\mathcal{L}(\mathcal{D}, \theta) &= \log P(\mathcal{D} \mid \theta) \\
+  			&=\sum_{i=1}^N \sum_{j=1}^M \log P(X_{ij} = x_{ij}, Z_{ij} = z_{ij}) \\
+  			&=\sum_{i=1}^N \sum_{j=1}^M \log \left[ (1-\pi)^{1-z_{ij}}\pi^{z_{ij}}\mathcal{N}(x_{ij} \mid \mu_{z_{ij}, \Sigma_{z_{ij}}})\right]
+  		\end{align*}
+  		Note that tbe above is not hard to optimzie, since we know the values $z_{ij}$ which tells us exactly which distribution each of the $X_{ij}$ belongs to. In fact, it is a well-known fact (as discussed in lecture) that the optimal parameters are:
+  		\begin{align*}
+  			\pi &= \frac{1}{NM} \sum_{i=1}^N \sum_{j=1}^M z_{ij} \\
+  			\mu_0 &= \frac{\sum_{i=1}^N \sum_{j=1}^M (1 - z_{ij})x_{ij}}{\sum_{i=1}^N \sum_{j=1}^M (1-z_{ij})} \\
+  			\mu_1 &= \frac{\sum_{i=1}^N \sum_{j=1}^M z_{ij} x_{ij}}{\sum_{i=1}^N \sum_{j=1}^M z_{ij}} \\
+  			\Sigma_0 &= \frac{\sum_{i=1}^N \sum_{j=1}^M (1-z_{ij}) (x_{ij} - \mu_0)(x_{ij} - \mu_0)^T}{\sum_{i=1}^N \sum_{j=1}^M (1-z_{ij})} \\
+  			\Sigma_1 &= \frac{\sum_{i=1}^N \sum_{j=1}^M z_{ij} (x_{ij} - \mu_1)(x_{ij} - \mu_1)^T}{\sum_{i=1}^N \sum_{j=1}^M z_{ij}}
+  		\end{align*}
+  		Using the labeled data, we arrive at the following estimates:
+  		\begin{align*}
+  		\pi &: 0.57 \\
+			\mu_0 &: [[-0.99437209, -1.11730233]] \\
+			\mu_1 &: [[1.04922807, 0.98085965]] \\
+			\Sigma_0 &: [[0.30811884, 0.28553768], [0.28553768, 0.81346635]]\\
+			\Sigma_1 &: [[0.77827888,0.19683566],[0.19683566, 0.24996938]]
+		 \end{align*}
+		\item We perform EM on the full data. We use three initializations - the first uses initializations from the parameters calculated in the previous section, and the second uses random initializations. See Figure \ref{fig:2aii} for a plot of the log likelihood over iteration for each initialization.
+
+		The final parameters are:
+		\begin{verbatim}
+				{
+				 'mu_0': matrix([[-1.04960572, -1.02771395]]),
+				 'mu_1': matrix([[0.98435439, 0.99093038]]),
+				 'sigma_0': matrix(
+				 		[[0.35521351, 0.30612163],
+		        [0.30612163, 0.77760628]]
+		     ),
+		     'sigma_1': matrix(
+		     		[[0.72282116, 0.1516442 ],
+		        [0.1516442 , 0.30376521]]
+		      ),
+		      'pi': 0.5881367654479127
+		    }
+				{
+					'mu_0': matrix([[-1.03563056, -0.98534555]]),
+					'mu_1': matrix([[1.00054998, 0.98642068]]),
+					'sigma_0': matrix(
+						[[0.3647824 , 0.33657943],
+				     [0.33657943, 0.86077047]]
+				   ),
+				  'sigma_1': matrix(
+				   	[[0.70784699, 0.15684262],
+				     [0.15684262, 0.30713373]]
+				    ),
+				   'pi': 0.5806319918854072
+				}
+				{
+					'mu_0': matrix([[0.81620805, 0.85773738]]),
+					'mu_1': matrix([[-1.21076696, -1.25595541]]),
+					'sigma_0': matrix(
+						[[0.83972866, 0.30374485],
+				     [0.30374485, 0.47545992]]
+				  ),
+				  'sigma_1': matrix(
+				  	[[0.30972454, 0.17759711],
+				     [0.17759711, 0.54276842]]
+				  ),
+				  'pi': 0.3303282218265587
+				 }
+			\end{verbatim}
+
+			Looking at Figure \ref{fig:2aii}, we note that the random initialization converge relatively quickly, to approximately the same value of the log-likelihood. However, the non-random initialization converges the fastest (within one iteration), which goes to show how much prior knowledge can bring to the table. It essentially means that knowing just a bit of information can significantly help the algorithm achieve a good optimal.
+
+			\begin{figure}[h!]
+				\centering
+				\includegraphics{starter/2aii.png}
+				\caption{Log-likelihood of simple mixture of gaussians model for 3 different initializations}
+				\label{fig:2aii}
+			\end{figure}
+
+  	\end{enumerate}
+  \item Geography-aware Mixture Model
+  	\begin{enumerate}[label=(\roman*)]
+  		\item We first explicitly write out the entire log likelihood in terms of our parameters, where we now define $\theta = (\phi, \lambda, \mu_0, \mu_1, \Sigma_0, \Sigma_0)$. We have:
+  		\begin{align*}
+  			\ell\ell(\mathcal{D}\mid \theta) &= \left(\sum_{i=1}^N \sum_{j=1}^M \log \mathcal{N}(x_{ij} \mid \mu_{z_{ij}}, \Sigma_{z_{ij}})\right) \\
+  			&+ \left(\sum_{i=1}^N \sum_{j=1}^M (1 - |z_{ij} - y_i|)\log \lambda + (|z_{ij} - y_i|)\log(1 - \lambda) \right) \\
+  			&+ M\sum_{i=1}^N y_i \log \phi + (1-y_i)\log (1 -\phi)
+  		\end{align*}
+  		We can immediately note the similarity between this log-likelihood and the one from the previous model in Part A. In fact, we note that the estimates $\mu_0, \mu_1, \Sigma_0$ and $\Sigma_1$ will remain unchanged. We can also note that the estimat for $\phi$ is very similar to our estimate for $\pi$ previously, so we have:
+  		$$
+  			\phi = \frac{1}{N}\sum_{i=1}^N y_i
+  		$$
+  		Similary, we have the estimate for $\lambda$ as:
+  		$$
+  			\lambda = \frac{1}{NM} \sum_{i=1}^N \sum_{j=1}^M (1 - |z_{ij} - y_i|)
+  		$$
+  		After running the code with the given labeled data, we find the estimate to be:
+  		\begin{align*}
+				\phi_{MLE} &= 0.6 \\
+				\lambda_{MLE} &= 0.93
+  		\end{align*}
+  		\item 1
+  	\end{enumerate}
 \end{enumerate}
 
 \end{document}
