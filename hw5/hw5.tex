@@ -287,190 +287,162 @@ that all of this is my own work.
   			\caption{Classification of Each Respondant into Groupsbased on their preferences}
   			\label{fig:2Bii}
   		\end{figure}
-  		\item 
-  	\end{enumerate}
-  	\item we've actually already done most of the derivations for this part of the problem in previous sections. We simply provide a summary here. We first note that:
-  	\begin{align*}
-  		p(y_i, z_{i, 1:M} \mid x_{i, 1:M}, \theta) &= \frac{p(x_{i, 1:M} \mid z_{i, 1:M}, \mu_0, \mu_1, \Sigma_0, \Sigma_1)p(z_{i, 1:M} \mid y_i, \lambda)p(y_i \mid \phi)}{p(x_{i, 1:M} \mid \theta)} \tag{Bayes Rule} \\
-  		&\propto p(y_i \mid \phi)\prod_{j=1}^M p(z_{ij} \mid y_i, \lambda)p(x_{ij} \mid z_{ij}, \mu_0, \mu_1, \Sigma_0, \Sigma_1) \tag{Due to the independence assumptions from the graph} \\
-  		&\propto \phi^{y_1}(1-\phi)^{1-y_i}\prod_{j=1}^M \lambda^{1-|z_{ij} - y_i|}(1-\lambda)^{|z_{ij} - y_i|}\mathcal{N}(x_{ij} \mid \mu_{z_{ij}}, \Sigma_{z_{ij}})
-  	\end{align*}
-  	We note that the above factors quite nicely. However, we also note that we don't need to implement such detail (we have helper functions to do that for us already). Next, we compute the values we're actually interested in. We note that we already showed how to derive these above, so we do not repeat the derivation. We have the below, which we can implement directly since we already have helper functions for most parts:
-  	\begin{align*}
-  		p(y_i = 1 \mid x_{i, 1:M}, \theta) &\propto p(y_i = 1\mid \phi) \prod_{j=1}^M\sum_{z_{ij}}p(x_{ij} \mid z_{ij}, \mu_0, \mu_1, \Sigma_0, \Sigma_1)p(z_{ij} \mid y_i = 1, \lambda) \\
-  		p(z_{ij} = 1 \mid x_{i, 1:M}, \theta) &= \sum_{y_i}p(z_{ij} = 1 \mid y_i, \lambda)p(y_i \mid x_{i, 1:M}, \theta)
-  	\end{align*}
-  	\item We run the EM algorithm based on the above and plot the log-likelihood for three different initializations. See Figure \ref{fig:2Biv} for the results. We note that for the non-random initialization, we achieve log-likelihood for each iteration of $[-2607.902966433062, -2716.5822361266037, -2716.583264608487]$ which is lower than the log-likelihood achieved from the model in Part (a). This is expected, since for this model, we have more variables but the same amount of data. The final parameters for each initialization are given by:
-  	\begin{verbatim}
-  		{
-  			'pi': 0.57,
-  			'mu_0': matrix([[-0.58070609, -0.53211384]]),
-  			'mu_1': matrix([[0.73792493, 0.72178054]]),
-  			'sigma_0': matrix(
-  				[[1.13101152, 0.94410317],
-        	[0.94410317, 1.33282963]]
-        ),
-        'sigma_1': matrix(
-        	[[1.15358039, 0.6844471 ],
-        	[0.6844471 , 0.90550767]]
-        ),
-        'lambda': 0.9300033991815723,
-        'phi': 0.5599913398162488
-       }
-			 {
-			 	'pi': 0.8635382287551139,
-			 	'mu_0': matrix([[0.146641, 0.159525]]),
-			 	'mu_1': matrix([[0.146641, 0.159525]]),
-			 	'sigma_0': matrix(
-			 		[[1.57352898, 1.20983373],
-        	[1.20983373, 1.48599977]]
-        ),
-        'sigma_1': matrix(
-        	[[1.57352898, 1.20983373],
-        	[1.20983373, 1.48599977]]
-        ),
-        'lambda': 0.12577219079635513,
-        'phi': 4.813683538003169e-15
-       }
-			 {
-			 	'pi': 0.27365474262398237,
-			 	'mu_0': matrix([[0.14664098, 0.15952498]]),
-			 	'mu_1': matrix([[0.14664101, 0.15952501]]),
-			 	'sigma_0': matrix(
-			 		[[1.57352898, 1.20983374],
-        	[1.20983374, 1.48599979]]
-        ),
-        'sigma_1': matrix(
-        	[[1.57352898, 1.20983373],
-        	[1.20983373, 1.48599977]]
-        ),
-        'lambda': 0.612194424069675,
-        'phi': 0.9998477583843295
-       }
+  		\item we've actually already done most of the derivations for this part of the problem in previous sections. We simply provide a summary here. We first note that:
+	  	\begin{align*}
+	  		p(y_i, z_{i, 1:M} \mid x_{i, 1:M}, \theta) &= \frac{p(x_{i, 1:M} \mid z_{i, 1:M}, \mu_0, \mu_1, \Sigma_0, \Sigma_1)p(z_{i, 1:M} \mid y_i, \lambda)p(y_i \mid \phi)}{p(x_{i, 1:M} \mid \theta)} \tag{Bayes Rule} \\
+	  		&\propto p(y_i \mid \phi)\prod_{j=1}^M p(z_{ij} \mid y_i, \lambda)p(x_{ij} \mid z_{ij}, \mu_0, \mu_1, \Sigma_0, \Sigma_1) \tag{Due to the independence assumptions from the graph} \\
+	  		&\propto \phi^{y_1}(1-\phi)^{1-y_i}\prod_{j=1}^M \lambda^{1-|z_{ij} - y_i|}(1-\lambda)^{|z_{ij} - y_i|}\mathcal{N}(x_{ij} \mid \mu_{z_{ij}}, \Sigma_{z_{ij}})
+	  	\end{align*}
+	  	We note that the above factors quite nicely. However, we also note that we don't need to implement such detail (we have helper functions to do that for us already). Next, we compute the values we're actually interested in. We note that we already showed how to derive these above, so we do not repeat the derivation. We have the below, which we can implement directly since we already have helper functions for most parts:
+	  	\begin{align*}
+	  		p(y_i = 1 \mid x_{i, 1:M}, \theta) &\propto p(y_i = 1\mid \phi) \prod_{j=1}^M\sum_{z_{ij}}p(x_{ij} \mid z_{ij}, \mu_0, \mu_1, \Sigma_0, \Sigma_1)p(z_{ij} \mid y_i = 1, \lambda) \\
+	  		p(z_{ij} = 1 \mid x_{i, 1:M}, \theta) &= \sum_{y_i}p(z_{ij} = 1 \mid y_i, \lambda)p(y_i \mid x_{i, 1:M}, \theta)
+	  	\end{align*}
+  		\item We run the EM algorithm based on the above and plot the log-likelihood for three different initializations. See Figure \ref{fig:2Biv} for the results. We note that for the non-random initialization, we achieve log-likelihood for each iteration of $[-2607.902966433062, -2716.5822361266037, -2716.583264608487]$ which is lower than the log-likelihood achieved from the model in Part (a). This is expected, since for this model, we have more variables but the same amount of data. The final parameters for each initialization are given by:
+	  	\begin{verbatim}
+	  		{
+	  			'pi': 0.57,
+	  			'mu_0': matrix([[-0.58070609, -0.53211384]]),
+	  			'mu_1': matrix([[0.73792493, 0.72178054]]),
+	  			'sigma_0': matrix(
+	  				[[1.13101152, 0.94410317],
+	        	[0.94410317, 1.33282963]]
+	        ),
+	        'sigma_1': matrix(
+	        	[[1.15358039, 0.6844471 ],
+	        	[0.6844471 , 0.90550767]]
+	        ),
+	        'lambda': 0.9300033991815723,
+	        'phi': 0.5599913398162488
+	       }
+				 {
+				 	'pi': 0.8635382287551139,
+				 	'mu_0': matrix([[0.146641, 0.159525]]),
+				 	'mu_1': matrix([[0.146641, 0.159525]]),
+				 	'sigma_0': matrix(
+				 		[[1.57352898, 1.20983373],
+	        	[1.20983373, 1.48599977]]
+	        ),
+	        'sigma_1': matrix(
+	        	[[1.57352898, 1.20983373],
+	        	[1.20983373, 1.48599977]]
+	        ),
+	        'lambda': 0.12577219079635513,
+	        'phi': 4.813683538003169e-15
+	       }
+				 {
+				 	'pi': 0.27365474262398237,
+				 	'mu_0': matrix([[0.14664098, 0.15952498]]),
+				 	'mu_1': matrix([[0.14664101, 0.15952501]]),
+				 	'sigma_0': matrix(
+				 		[[1.57352898, 1.20983374],
+	        	[1.20983374, 1.48599979]]
+	        ),
+	        'sigma_1': matrix(
+	        	[[1.57352898, 1.20983373],
+	        	[1.20983373, 1.48599977]]
+	        ),
+	        'lambda': 0.612194424069675,
+	        'phi': 0.9998477583843295
+	       }
 
-  	\end{verbatim}
+	  	\end{verbatim}
 
-  	\begin{figure}[h!]
-  	\centering
-  	\includegraphics{starter/2Biv.png}
-  	\caption{Log-likelihood Geographical-aware mixture of gaussians model with three distinct initializations.}
-  	\label{fig:2Biv}
-  	\end{figure}
+	  	\begin{figure}[h!]
+	  	\centering
+	  	\includegraphics{starter/2Biv.png}
+	  	\caption{Log-likelihood Geographical-aware mixture of gaussians model with three distinct initializations.}
+	  	\label{fig:2Biv}
+	  	\end{figure}
 
-  	\item We note that the parameters yielding the highest log-likelihood are those estimated from the real, visible data. We use these parameters to classify target precincts, as well as identify the political leaning of everyone surveyed.
+	  	\item We note that the parameters yielding the highest log-likelihood are those estimated from the real, visible data. We use these parameters to classify target precincts, as well as identify the political leaning of everyone surveyed.
 
-  	The parameters used for initialization are:
-  	\begin{align*}
-  		\pi &= 0.57 \\
-			\mu_0 &= [[-0.58070609,-0.53211384]] \\
-			\mu_1 &= [[0.73792493, 0.72178054]]\\
-			\sigma_0 &= [[1.13101152, 0.94410317],
-			 [0.94410317,1.33282963]] \\
-			\sigma_1 &= [[1.15358039,0.6844471 ],
-			 [0.6844471,0.90550767]] \\
-			\lambda &= 0.9300033991815723 \\
-			\phi &= 0.5599913398162488
-  	\end{align*}
+	  	The parameters used for initialization are:
+	  	\begin{align*}
+	  		\pi &= 0.57 \\
+				\mu_0 &= [[-0.58070609,-0.53211384]] \\
+				\mu_1 &= [[0.73792493, 0.72178054]]\\
+				\sigma_0 &= [[1.13101152, 0.94410317],
+				 [0.94410317,1.33282963]] \\
+				\sigma_1 &= [[1.15358039,0.6844471 ],
+				 [0.6844471,0.90550767]] \\
+				\lambda &= 0.9300033991815723 \\
+				\phi &= 0.5599913398162488
+	  	\end{align*}
 
 
-  	The results for the target precints are presented in Table \ref{tab:targets_2}.
+	  	The results for the target precints are presented in Table \ref{tab:targets_2}.
 
-		\begin{table}
-			\small
-			\centering
-			\begin{tabular}{ |c|c|c| } 
-				\hline
-			    Index of Precinct & $p(y_{i} = 1 \mid x_{i, 1:M})$ & Should Target \\
-				 \hline
-				  0 & 0.9999999761447184 & 1 \\
-					1 & 0.9999999976681156 & 1 \\
-					2 & 4.1642095825431577e-07 & 0 \\
-					3 & 0.9999561451144368 & 1 \\
-					4 & 6.510163155155151e-09 & 0 \\
-					5 & 0.9999317493963904 & 1 \\
-					6 & 0.9999999901314645 & 1 \\
-					7 & 0.9999999490387573 & 1 \\
-					8 & 0.9999999461386037 & 1 \\
-					9 & 0.9999999998084497 & 1 \\
-					10 &  1.753488633084377e-07 & 0 \\
-					11 &  1.1369890316452593e-06 & 0 \\
-					12 &  1.7851423001534098e-09 & 0 \\
-					13 &  0.9999996965006349 & 1 \\
-					14 &  0.9998578186734897 & 1 \\
-					15 &  9.748460406660177e-08 & 0 \\
-					16 &  1.648330293429426e-11 & 0 \\
-					17 &  0.9999999246474265 & 1 \\
-					18 &  0.9999999997017036 & 1 \\
-					19 &  0.9999998385422671 & 1 \\
-					20 &  4.722503826228951e-10 & 0 \\
-					21 &  0.9999999978598132 & 1 \\
-					22 &  0.999668991045038 & 1 \\
-					23 &  8.490281458847395e-08 & 0 \\
-					24 &  0.9999999371020845 & 1 \\
-					25 &  5.388141958763265e-06 & 0 \\
-					26 &  3.2747775600008553e-09 & 0 \\
-					27 &  8.027057517125992e-10 & 0 \\
-					28 &  0.9999999965264651 & 1 \\
-					29 &  3.4376917788820625e-10 & 0 \\
-					30 &  0.9999999999567194 & 1 \\
-					31 &  0.9999999639951135 & 1 \\
-					32 &  0.9999997585578096 & 1 \\
-					33 &  1.809478604025113e-07 & 0 \\
-					34 &  0.9999999076903715 & 1 \\
-					35 &  1.3462185445974097e-07 & 0 \\
-					36 &  0.9999999951844862 & 1 \\
-					37 &  6.830491441231028e-09 & 0 \\
-					38 &  7.885263404231153e-09 & 0 \\
-					39 &  0.9999930295758916 & 1 \\
-					40 &  1.5811263038702554e-09 & 0 \\
-					41 &  0.9999890628446244 & 1 \\
-					42 &  0.999999877444418 & 1 \\
-					43 &  3.0295000348713675e-07 & 0 \\
-					44 &  0.9999999111630276 & 1 \\
-					45 &  9.276313455970333e-06 & 0 \\
-					46 &  0.9998462758417149 & 1 \\
-					47 &  4.982129691779141e-10 & 0 \\
-					48 &  0.9999803999783657 & 1 \\
-					49 &  0.0003271418283425953 & 0  \\
-				 \hline
-			\end{tabular}
-			\caption{Targetted Precincts for Party 1 Based on Model (B)}
-			\label{tab:targets_2}
-		\end{table}
+			\begin{table}
+				\small
+				\centering
+				\begin{tabular}{ |c|c|c| } 
+					\hline
+				    Index of Precinct & $p(y_{i} = 1 \mid x_{i, 1:M})$ & Should Target \\
+					 \hline
+					  0 & 0.9999999761447184 & 1 \\
+						1 & 0.9999999976681156 & 1 \\
+						2 & 4.1642095825431577e-07 & 0 \\
+						3 & 0.9999561451144368 & 1 \\
+						4 & 6.510163155155151e-09 & 0 \\
+						5 & 0.9999317493963904 & 1 \\
+						6 & 0.9999999901314645 & 1 \\
+						7 & 0.9999999490387573 & 1 \\
+						8 & 0.9999999461386037 & 1 \\
+						9 & 0.9999999998084497 & 1 \\
+						10 &  1.753488633084377e-07 & 0 \\
+						11 &  1.1369890316452593e-06 & 0 \\
+						12 &  1.7851423001534098e-09 & 0 \\
+						13 &  0.9999996965006349 & 1 \\
+						14 &  0.9998578186734897 & 1 \\
+						15 &  9.748460406660177e-08 & 0 \\
+						16 &  1.648330293429426e-11 & 0 \\
+						17 &  0.9999999246474265 & 1 \\
+						18 &  0.9999999997017036 & 1 \\
+						19 &  0.9999998385422671 & 1 \\
+						20 &  4.722503826228951e-10 & 0 \\
+						21 &  0.9999999978598132 & 1 \\
+						22 &  0.999668991045038 & 1 \\
+						23 &  8.490281458847395e-08 & 0 \\
+						24 &  0.9999999371020845 & 1 \\
+						25 &  5.388141958763265e-06 & 0 \\
+						26 &  3.2747775600008553e-09 & 0 \\
+						27 &  8.027057517125992e-10 & 0 \\
+						28 &  0.9999999965264651 & 1 \\
+						29 &  3.4376917788820625e-10 & 0 \\
+						30 &  0.9999999999567194 & 1 \\
+						31 &  0.9999999639951135 & 1 \\
+						32 &  0.9999997585578096 & 1 \\
+						33 &  1.809478604025113e-07 & 0 \\
+						34 &  0.9999999076903715 & 1 \\
+						35 &  1.3462185445974097e-07 & 0 \\
+						36 &  0.9999999951844862 & 1 \\
+						37 &  6.830491441231028e-09 & 0 \\
+						38 &  7.885263404231153e-09 & 0 \\
+						39 &  0.9999930295758916 & 1 \\
+						40 &  1.5811263038702554e-09 & 0 \\
+						41 &  0.9999890628446244 & 1 \\
+						42 &  0.999999877444418 & 1 \\
+						43 &  3.0295000348713675e-07 & 0 \\
+						44 &  0.9999999111630276 & 1 \\
+						45 &  9.276313455970333e-06 & 0 \\
+						46 &  0.9998462758417149 & 1 \\
+						47 &  4.982129691779141e-10 & 0 \\
+						48 &  0.9999803999783657 & 1 \\
+						49 &  0.0003271418283425953 & 0  \\
+					 \hline
+				\end{tabular}
+				\caption{Targetted Precincts for Party 1 Based on Model (B)}
+				\label{tab:targets_2}
+			\end{table}
 
-  	\begin{figure}[h!]
-  	\centering
-  	\includegraphics{starter/2Bv.png}
-  	\caption{Classification of Individuals into groups based on preferences.}
-  	\label{fig:2Bv}
-  	\end{figure}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	  	\begin{figure}[h!]
+	  	\centering
+	  	\includegraphics{starter/2Bv.png}
+	  	\caption{Classification of Individuals into groups based on preferences.}
+	  	\label{fig:2Bv}
+	  	\end{figure}
+	  \end{enumerate}
 \end{enumerate}
 
 \end{document}
