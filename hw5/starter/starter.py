@@ -19,7 +19,7 @@ UNLABELED_FILE = "surveyunlabeled.dat"
 # General helper functions
 
 def colorprint(message, color="rand"):
-  """Prints your message in pretty colors! 
+  """Prints your message in pretty colors!
 
   So far, only the colors below are available.
   """
@@ -315,13 +315,13 @@ def perform_em_modelA(X, N, M, init_params, max_iters=50, eps=1e-2):
           The value assigned to each key is a (1,2) numpy.matrix encoding X_ij.
       N, M: Counts of precincts and voters
       init_params: parameters of the model given as a dictionary
-          Dictionary shoudl contain params['pi'], params['mu_0'], 
-          params['mu_1'], params['sigma_0'], params['sigma_1'], 
+          Dictionary shoudl contain params['pi'], params['mu_0'],
+          params['mu_1'], params['sigma_0'], params['sigma_1'],
 
   Output:
       params: parameters of the trained model encoded as a dictionary
-          Dictionary shoudl contain params['pi'], params['mu_0'], 
-          params['mu_1'], params['sigma_0'], params['sigma_1'], 
+          Dictionary shoudl contain params['pi'], params['mu_0'],
+          params['mu_1'], params['sigma_0'], params['sigma_1'],
           params['phi'], params['lambda']
       log_likelihood: array of log-likelihood values across iterations
   """
@@ -378,6 +378,23 @@ def perform_em_modelA(X, N, M, init_params, max_iters=50, eps=1e-2):
   return params, log_likelihood
 
 
+def MLE_of_phi_and_lambda_internal(Y, Z, N, M):
+  MLE_phi, MLE_lambda = 0.0, 0.0
+
+  for _, yi in Y.items():
+    MLE_phi += yi
+
+  MLE_phi /= N
+
+  for (i, j), zij in Z.items():
+    MLE_lambda += (1 - abs(zij - Y[i]))
+  MLE_lambda /= (N*M)
+
+  # END_YOUR_CODE
+
+  return MLE_phi, MLE_lambda
+
+
 def MLE_of_phi_and_lamdba():
   """Perform MLE estimation of Model B parameters.
 
@@ -401,18 +418,39 @@ def MLE_of_phi_and_lamdba():
 
   # -------------------------------------------------------------------------
   # TODO: Code to compute MLE_phi, MLE_lambda
-  for _, yi in Y.items():
-    MLE_phi += yi
-
-  MLE_phi /= N
-
-  for (i, j), zij in Z.items():
-    MLE_lambda += (1 - abs(zij - Y[i]))
-  MLE_lambda /= (N*M)
-
+  MLE_phi, MLE_lambda = MLE_of_phi_and_lambda_internal(Y, Z, N, M)
   # END_YOUR_CODE
 
   return MLE_phi, MLE_lambda
+
+
+def compute_posterior_y(X, N, M, params):
+  mu_0 = params['mu_0']
+  mu_1 = params['mu_1']
+  sigma_0 = params['sigma_0']
+  sigma_1 = params['sigma_1']
+  MLE_phi = params['phi']
+  MLE_lambda = params['lambda']
+
+  posterior_y = [None for i in range(N)]
+
+  p_z0_given_y0 = p_zij_given_yi(0, 0, MLE_lambda)
+  p_z0_given_y1 = p_zij_given_yi(0, 1, MLE_lambda)
+  p_z1_given_y0 = p_zij_given_yi(1, 0, MLE_lambda)
+  p_z1_given_y1 = p_zij_given_yi(1, 1, MLE_lambda)
+  for i in range(N):
+    log_p_y_0 = np.log(p_yi(0, MLE_phi))
+    log_p_y_1 = np.log(p_yi(1, MLE_phi))
+    for j in range(M):
+      log_p_y_0 += np.log(
+          p_xij_given_zij(X[(i, j)], mu_0, sigma_0) * p_z0_given_y0 +
+          p_xij_given_zij(X[(i, j)], mu_1, sigma_1) * p_z1_given_y0)
+      log_p_y_1 += np.log(
+          p_xij_given_zij(X[(i, j)], mu_0, sigma_0) * p_z0_given_y1 +
+          p_xij_given_zij(X[(i, j)], mu_1, sigma_1) * p_z1_given_y1)
+    posterior_y[i] = np.exp(log_p_y_1) / (np.exp(log_p_y_1) + np.exp(log_p_y_0))
+
+  return posterior_y
 
 
 def estimate_leanings_of_precincts(X, N, M, params=None):
@@ -424,8 +462,8 @@ def estimate_leanings_of_precincts(X, N, M, params=None):
           The value assigned to each key is a (1,2) numpy.matrix encoding X_ij.
       N, M: Counts of precincts and voters
       params: parameters of the model given as a dictionary
-          Dictionary shoudl contain params['pi'], params['mu_0'], 
-          params['mu_1'], params['sigma_0'], params['sigma_1'], 
+          Dictionary shoudl contain params['pi'], params['mu_0'],
+          params['mu_1'], params['sigma_0'], params['sigma_1'],
           params['phi'], params['lambda']
 
   Output:
@@ -435,6 +473,10 @@ def estimate_leanings_of_precincts(X, N, M, params=None):
   if params == None:
     pi, mu_0, mu_1, sigma_0, sigma_1 = MLE_Estimation()
     MLE_phi, MLE_lambda = MLE_of_phi_and_lamdba()
+    params = {
+        'pi': pi, 'mu_0': mu_0, 'mu_1': mu_1, 'sigma_0': sigma_0,
+        'sigma_1': sigma_1, 'phi': MLE_phi, 'lambda': MLE_lambda
+    }
   else:
     pi = params['pi']
     mu_0 = params['mu_0']
@@ -444,23 +486,10 @@ def estimate_leanings_of_precincts(X, N, M, params=None):
     MLE_phi = params['phi']
     MLE_lambda = params['lambda']
 
-  posterior_y = [None for i in range(N)]
   # -------------------------------------------------------------------------
   # TODO: Code to compute posterior_y
 
-  p_z0_given_y0 = p_zij_given_yi(0, 0, MLE_lambda)
-  p_z0_given_y1 = p_zij_given_yi(0, 1, MLE_lambda)
-  p_z1_given_y0 = p_zij_given_yi(1, 0, MLE_lambda)
-  p_z1_given_y1 = p_zij_given_yi(1, 1, MLE_lambda)
-  for i in range(N):
-    p_y_0 = p_yi(0, MLE_phi)
-    p_y_1 = p_yi(1, MLE_phi)
-    for j in range(M):
-      p_y_0 *= (p_xij_given_zij(X[(i, j)], mu_0, sigma_0) * p_z0_given_y0 +
-                p_xij_given_zij(X[(i, j)], mu_1, sigma_1) * p_z1_given_y0)
-      p_y_1 *= (p_xij_given_zij(X[(i, j)], mu_0, sigma_0) * p_z0_given_y1 +
-                p_xij_given_zij(X[(i, j)], mu_1, sigma_1) * p_z1_given_y1)
-    posterior_y[i] = p_y_1 / float(p_y_1 + p_y_0)
+  posterior_y = compute_posterior_y(X, N, M, params)
 
   # END_YOUR_CODE
 
@@ -468,7 +497,19 @@ def estimate_leanings_of_precincts(X, N, M, params=None):
   return summary
 
 
-def plot_individual_inclinations(X, N, M, params=None):
+def compute_posterior_z_ij(posterior_y_i, lambd):
+  posterior_z = [0, 0]
+  posterior_z[0] = p_zij_given_yi(
+      0, 0, lambd) * (1 - posterior_y_i) + p_zij_given_yi(
+      0, 1, lambd) * posterior_y_i
+  posterior_z[1] = p_zij_given_yi(
+      1, 0, lambd) * (1 - posterior_y_i) + p_zij_given_yi(
+      1, 1, lambd) * posterior_y_i
+  assert(abs(1 - np.sum(posterior_z)) < 1e-8)
+  return posterior_z
+
+
+def plot_individual_inclinations(X, N, M, outfile, params=None):
   """Generate 2d plot of inidivudal statistics in each class.
 
   Input:
@@ -477,14 +518,18 @@ def plot_individual_inclinations(X, N, M, params=None):
           The value assigned to each key is a (1,2) numpy.matrix encoding X_ij.
       N, M: Counts of precincts and voters
       params: parameters of the model given as a dictionary
-          Dictionary shoudl contain params['pi'], params['mu_0'], 
-          params['mu_1'], params['sigma_0'], params['sigma_1'], 
+          Dictionary shoudl contain params['pi'], params['mu_0'],
+          params['mu_1'], params['sigma_0'], params['sigma_1'],
           params['phi'], params['lambda']
   """
 
   if params == None:
     pi, mu_0, mu_1, sigma_0, sigma_1 = MLE_Estimation()
     MLE_phi, MLE_lambda = MLE_of_phi_and_lamdba()
+    params = {
+        'pi': pi, 'mu_0': mu_0, 'mu_1': mu_1, 'sigma_0': sigma_0,
+        'sigma_1': sigma_1, 'phi': MLE_phi, 'lambda': MLE_lambda
+    }
   else:
     pi = params['pi']
     mu_0 = params['mu_0']
@@ -499,18 +544,15 @@ def plot_individual_inclinations(X, N, M, params=None):
   domain1 = []
   range1 = []
 
+  # p(y_i = 1 | D) = posterior_y[i]
+  posterior_y = compute_posterior_y(X, N, M, params)
+
   for (i, j), x_ij in X.items():
     posterior_z = [0.0, 0.0]
 
     # -------------------------------------------------------------------------
     # TODO: Code to compute posterior_z
-    posterior_z[0] = z_marginal(0, MLE_lambda, MLE_phi)
-    posterior_z[1] = z_marginal(1, MLE_lambda, MLE_phi)
-    for k in range(M):
-      posterior_z[0] *= p_xij_given_zij(X[(i, k)], mu_0, sigma_0)
-      posterior_z[1] *= p_xij_given_zij(X[(i, k)], mu_1, sigma_1)
-
-    posterior_z /= np.sum(posterior_z)
+    posterior_z = compute_posterior_z_ij(posterior_y[i], MLE_lambda)
     # END_YOUR_CODE
 
     if posterior_z[1] >= posterior_z[0]:
@@ -524,7 +566,7 @@ def plot_individual_inclinations(X, N, M, params=None):
   plt.plot(domain0, range0, 'b+')
   p1,  = plt.plot(mu_0[0, 0], mu_0[0, 1], 'kd')
   p2,  = plt.plot(mu_1[0, 0], mu_1[0, 1], 'kd')
-  plt.savefig('2Bii')
+  plt.savefig(outfile)
   plt.show()
 
 
@@ -566,14 +608,14 @@ def perform_em(X, N, M, init_params, max_iters=50, eps=1e-2):
           The value assigned to each key is a (1,2) numpy.matrix encoding X_ij.
       N, M: Counts of precincts and voters
       init_params: parameters of the model given as a dictionary
-          Dictionary shoudl contain: params['mu_0'], 
-          params['mu_1'], params['sigma_0'], params['sigma_1'], 
+          Dictionary shoudl contain: params['mu_0'],
+          params['mu_1'], params['sigma_0'], params['sigma_1'],
           params['phi'], params['lambda']
 
   Output:
       params: parameters of the trained model encoded as a dictionary
-          Dictionary shoudl contain params['pi'], params['mu_0'], 
-          params['mu_1'], params['sigma_0'], params['sigma_1'], 
+          Dictionary shoudl contain params['pi'], params['mu_0'],
+          params['mu_1'], params['sigma_0'], params['sigma_1'],
           params['phi'], params['lambda']
       log_likelihood: array of log-likelihood values across iterations
   """
@@ -593,18 +635,12 @@ def perform_em(X, N, M, init_params, max_iters=50, eps=1e-2):
     # -------------------------------------------------------------------------
     # TODO: Code for the E step
 
-    # END_YOUR_CODE
-
-    # -------------------------------------------------------------------------
-    # TODO: Code for the M step
-    # You should fill the values of pi, mu_0, mu_1, sigma_0, sigma_1
-
-    # END_YOUR_CODE
-
-    # -------------------------------------------------------------------------
-    # TODO: Code for the E step
-
-    pass
+    params = {'mu_0': mu_0, 'mu_1': mu_1, 'sigma_0': sigma_0,
+              'sigma_1': sigma_1, 'phi': phi, 'lambda': lambd}
+    Y = {i: p_yi for i, p_yi in enumerate(compute_posterior_y(X, N, M, params))}
+    Z = {}
+    for (i, j), xij in X.items():
+      Z[(i, j)] = compute_posterior_z_ij(Y[i], lambd)[1]
 
     # END_YOUR_CODE
 
@@ -618,7 +654,8 @@ def perform_em(X, N, M, init_params, max_iters=50, eps=1e-2):
     # TODO: Code for the M step
     # You need to compute the above parameters
 
-    pass
+    _, mu_0, mu_1, sigma_0, sigma_1 = MLE_EstimationInternal(X, Z)
+    phi, lambd = MLE_of_phi_and_lambda_internal(Y, Z, N, M)
 
     # END_YOUR_CODE
 
@@ -699,7 +736,7 @@ plt.legend(['MLE initialization', 'Random initialization',
             'Random initialization'], loc=4)
 plt.xlabel('Iteration')
 plt.ylabel('Log likelihood')
-plt.savefig("2aii")
+plt.savefig("2Aii")
 plt.show()
 
 #===============================================================================
@@ -720,7 +757,7 @@ summary = estimate_leanings_of_precincts(X, N, M, params=None)
 pprint(summary)
 
 # END_YOUR_CODE
-plot_individual_inclinations(X, N, M, params=None)
+plot_individual_inclinations(X, N, M,  "2Bii", params=None)
 
 #===============================================================================
 # pt B.iv
@@ -770,6 +807,7 @@ plt.legend(['MLE initialization', 'Random initialization',
             'Random initialization'], loc=4)
 plt.xlabel('Iteration')
 plt.ylabel('Log likelihood')
+plt.savefig("2Biv")
 plt.show()
 
 #===============================================================================
@@ -791,10 +829,9 @@ params, log_likelihood = perform_em(X, N, M, params)
 for k, v in params.items():
   print(k, '=', v)
 summary = estimate_leanings_of_precincts(X, N, M, params=params)
-plot_individual_inclinations(X, N, M, params=params)
+plot_individual_inclinations(X, N, M, "2Bv", params=params)
 # TODO: print out the summary just calculated so you can report it in a table as
 # required for  this question
-
-pass
+pprint(summary)
 
 # END_YOUR_CODE

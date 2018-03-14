@@ -168,7 +168,7 @@ that all of this is my own work.
 				 }
 			\end{verbatim}
 
-			Looking at Figure \ref{fig:2aii}, we note that the random initialization converge relatively quickly, to approximately the same value of the log-likelihood. However, the non-random initialization converges the fastest (within one iteration), which goes to show how much prior knowledge can bring to the table. It essentially means that knowing just a bit of information can significantly help the algorithm achieve a good optimal.
+			Looking at Figure \ref{fig:2aii}, we note that the random initialization converge relatively quickly, to approximately the same value of the log-likelihood. However, the non-random initialization converges the fastest (within one iteration), which goes to show how much prior knowledge can bring to the table. It essentially means that knowing just a bit of information can significantly help the algorithm achieve a good optimal. The log-likelihood values of the non-random experiments are $[-2608.540223652655, -2572.3551114614665, -2572.3780059575265]$ for each iteration.
 
 			\begin{figure}[h!]
 				\centering
@@ -199,8 +199,193 @@ that all of this is my own work.
 				\phi_{MLE} &= 0.6 \\
 				\lambda_{MLE} &= 0.93
   		\end{align*}
-  		\item 1
+  		\item We note use the estimated parameters to analyze the unlabeled data to identify precincts that should be targetted by party 1. Specifically, we compute $p(y_i \mid X_{i, 1:M})$ for each precinct $i$ and identify those that exceed $0.5$. We have:
+  		\begin{align*}
+  			p(y_i = 1 \mid x_{i, 1:M}) &= \frac{p(y_i = 1)p(x_{i, 1:M} \mid y_i = 1)}{p(x_{i, 1:M})} \tag{Bayes Rule} \\
+  			&\propto p(y_i = 1) \sum_{z_{i, 1:M}} p(x_{i,1:M} \mid z_{i, 1:M})p(z_{i, 1:M} \mid y_i = 1) \tag{Marginalize out $z_{i, 1:M}$} \\
+  			&\propto p(y_1 = 1) \sum_{z_{i, 1:M}} \prod_{j=1}^M p(x_{ij} \mid z_{ij})p(z_{ij} \mid y_i = 1)  \tag{$x_{ij} \perp x_{ik} \mid z_{ij}$, $x_{ij} \perp z_{ik} \mid z_{ij}$, and $z_{ij} \perp z_{ik} \mid y_i$ for all $k \neq j$} \\
+  			&\propto p(y_i = 1)\prod_{j=1}^M \sum_{z_{ij}} p(x_{ij} \mid z_{ij})p(z_{ij} \mid y_i = 1)
+  		\end{align*}
+  		We compute the above for the unlabeled data and show the results in Table \ref{tab:targets_1}:
+
+  		\begin{table}
+  			\small
+  			\centering
+  			\begin{tabular}{ |c|c|c| } 
+  				\hline
+  			    Index of Precinct & $p(y_{i} = 1 \mid x_{i, 1:M})$ & Should Target \\
+					 \hline
+					   0  & 1.0 & 1 \\
+						 1  & 1.0 & 1 \\
+						 2  & 1.1068754364416026e-11 & 0 \\
+						 3  & 0.999999999999971 & 1 \\
+						 4  & 1.7959922085069583e-16 & 0 \\
+						 5  & 0.9999999999996437 & 1 \\
+						 6  & 0.9999999999999998 & 1 \\
+						 7  & 1.0 & 1 \\
+						 8  & 1.0 & 1 \\
+						 9  & 1.0 & 1 \\
+						 10 &  4.113176092557324e-11 & 0 \\
+						 11 &  2.272105269448472e-09 & 0 \\
+						 12 &  4.7377654114598854e-15 & 0 \\
+						 13 &  0.9999999999999989 & 1 \\
+						 14 &  0.9999999999127415 & 1 \\
+						 15 &  6.6307211160866306e-12 & 0 \\
+						 16 &  1.953301065078507e-14 & 0 \\
+						 17 &  1.0 & 1 \\
+						 18 &  1.0 & 1 \\
+						 19 &  0.9999999999999999 & 1 \\
+						 20 &  2.5869141669354016e-16 & 0 \\
+						 21 &  1.0 & 1 \\
+						 22 &  0.999999999968347 & 1 \\
+						 23 &  2.6585928944052086e-11 & 0 \\
+						 24 &  0.9999999999999918 & 1 \\
+						 25 &  5.717125299640498e-10 & 0 \\
+						 26 &  8.619958633430805e-15 & 0 \\
+						 27 &  3.6809211713034645e-15 & 0 \\
+						 28 &  1.0 & 1 \\
+						 29 &  1.037743486555199e-12 & 0 \\
+						 30 &  1.0 & 1 \\
+						 31 &  1.0 & 1 \\
+						 32 &  0.9999999999999997 & 1 \\
+						 33 &  1.1656312503716846e-11 & 0 \\
+						 34 &  0.9999999999999981 & 1 \\
+						 35 &  2.03129334436899e-12 & 0 \\
+						 36 &  1.0 & 1 \\
+						 37 &  9.353791524423957e-14 & 0 \\
+						 38 &  1.799202714186938e-13 & 0 \\
+						 39 &  0.9999999999999291 & 1 \\
+						 40 &  1.142121877276234e-14 & 0 \\
+						 41 &  0.9999999999998568 & 1 \\
+						 42 &  1.0 & 1 \\
+						 43 &  1.453942213333006e-14 & 0 \\
+						 44 &  0.9999999999999919 & 1 \\
+						 45 &  8.284798658381095e-10 & 0 \\
+						 46 &  0.9999999999866328 & 1 \\
+						 47 &  4.287280573564018e-14 & 0 \\
+						 48 &  0.9999999999748403 & 1 \\
+						 49 &  9.219259677820556e-0 &,  \\
+					 \hline
+				\end{tabular}
+  			\caption{Targetted Precincts for Party 1 Based on Model}
+  			\label{tab:targets_1}
+  		\end{table}
+  		In addition, we compute $p(z_{ij} \mid x_{i, 1:M})$ the affinity of each respondent to each party. We can do this as follows:
+  		\begin{align*}
+  			p(z_{ij} = 1 \mid x_{i, 1:M}) &= \sum_{y_i} p(z_{ij} = 1 \mid y_i, x_{i,1:M})p(y_i \mid x_{i, 1:M}) \tag{marginalize over $y_i$} \\
+  			&= \sum_{y_i} p(z_{ij} = 1 \mid y_i)p(y_i \mid x_{i,1:M}) \tag{$z_{ij} \perp x_{ik} \mid y_i$ for $k \neq j$} \\
+  			&= \sum_{y_i} p(z_{ij} = 1 \mid y_i) \sum_{z_{i,1:M}} p(y_i, z_{i, 1:M} \mid x_{i,1:M}) \tag{Marginalize over $z_{i,1:M}$} \\
+  			&\propto  \sum_{y_i} p(z_{ij} = 1 \mid y_i)p(y_i) \sum_{z_{i, 1:M}} p(x_{i,1:M} \mid y_i, z_{i,1:M})p(z_{i, 1:M} \mid y_i) \tag{Bayes Rule} \\
+  			&\propto \sum_{y_i} p(z_{ij} = 1 \mid y_i)p(y_i) \prod_{j=1}^M \sum_{z_{ij}} p(x_{ij} \mid z_{ij})p(z_{ij} \mid y_i)
+  		\end{align*}
+
+
+  		We note however that the easiest way to compute the above in practice is simply to use the second line, since we have already computed $p(y_i \mid x_{i,1:M}$. We plot the results on a two-dimensional plane and color each entry blue if $p(z_{ij} \mid x_{i, 1:M}) > 0.5$ and red otherwise. Furthermore, we indicate the position of the two guassian means. See Figure \ref{fig:2Bii}: 
+
+  		\begin{figure}[!h]
+  			\includegraphics{starter/2Bii.png}
+  			\caption{Classification of Each Respondant into Groupsbased on their preferences}
+  			\label{fig:2Bii}
+  		\end{figure}
+  		\item 
   	\end{enumerate}
+  	\item we've actually already done most of the derivations for this part of the problem in previous sections. We simply provide a summary here. We first note that:
+  	\begin{align*}
+  		p(y_i, z_{i, 1:M} \mid x_{i, 1:M}, \theta) &= \frac{p(x_{i, 1:M} \mid z_{i, 1:M}, \mu_0, \mu_1, \Sigma_0, \Sigma_1)p(z_{i, 1:M} \mid y_i, \lambda)p(y_i \mid \phi)}{p(x_{i, 1:M} \mid \theta)} \tag{Bayes Rule} \\
+  		&\propto p(y_i \mid \phi)\prod_{j=1}^M p(z_{ij} \mid y_i, \lambda)p(x_{ij} \mid z_{ij}, \mu_0, \mu_1, \Sigma_0, \Sigma_1) \tag{Due to the independence assumptions from the graph} \\
+  		&\propto \phi^{y_1}(1-\phi)^{1-y_i}\prod_{j=1}^M \lambda^{1-|z_{ij} - y_i|}(1-\lambda)^{|z_{ij} - y_i|}\mathcal{N}(x_{ij} \mid \mu_{z_{ij}}, \Sigma_{z_{ij}})
+  	\end{align*}
+  	We note that the above factors quite nicely. However, we also note that we don't need to implement such detail (we have helper functions to do that for us already). Next, we compute the values we're actually interested in. We note that we already showed how to derive these above, so we do not repeat the derivation. We have the below, which we can implement directly since we already have helper functions for most parts:
+  	\begin{align*}
+  		p(y_i = 1 \mid x_{i, 1:M}, \theta) &\propto p(y_i = 1\mid \phi) \prod_{j=1}^M\sum_{z_{ij}}p(x_{ij} \mid z_{ij}, \mu_0, \mu_1, \Sigma_0, \Sigma_1)p(z_{ij} \mid y_i = 1, \lambda) \\
+  		p(z_{ij} = 1 \mid x_{i, 1:M}, \theta) &= \sum_{y_i}p(z_{ij} = 1 \mid y_i, \lambda)p(y_i \mid x_{i, 1:M}, \theta)
+  	\end{align*}
+  	\item We run the EM algorithm based on the above and plot the log-likelihood for three different initializations. See Figure \ref{fig:2Bv} for the results. We note that for the non-random initialization, we achieve log-likelihood for each iteration of $[-2607.902966433062, -2716.5822361266037, -2716.583264608487]$ which is lower than the log-likelihood achieved from the model in Part (a). This is expected, since for this model, we have more variables but the same amount of data. The final parameters for each initialization are given by:
+  	\begin{verbatim}
+  		{
+  			'pi': 0.57,
+  			'mu_0': matrix([[-0.58070609, -0.53211384]]),
+  			'mu_1': matrix([[0.73792493, 0.72178054]]),
+  			'sigma_0': matrix(
+  				[[1.13101152, 0.94410317],
+        	[0.94410317, 1.33282963]]
+        ),
+        'sigma_1': matrix(
+        	[[1.15358039, 0.6844471 ],
+        	[0.6844471 , 0.90550767]]
+        ),
+        'lambda': 0.9300033991815723,
+        'phi': 0.5599913398162488
+       }
+			 {
+			 	'pi': 0.8635382287551139,
+			 	'mu_0': matrix([[0.146641, 0.159525]]),
+			 	'mu_1': matrix([[0.146641, 0.159525]]),
+			 	'sigma_0': matrix(
+			 		[[1.57352898, 1.20983373],
+        	[1.20983373, 1.48599977]]
+        ),
+        'sigma_1': matrix(
+        	[[1.57352898, 1.20983373],
+        	[1.20983373, 1.48599977]]
+        ),
+        'lambda': 0.12577219079635513,
+        'phi': 4.813683538003169e-15
+       }
+			 {
+			 	'pi': 0.27365474262398237,
+			 	'mu_0': matrix([[0.14664098, 0.15952498]]),
+			 	'mu_1': matrix([[0.14664101, 0.15952501]]),
+			 	'sigma_0': matrix(
+			 		[[1.57352898, 1.20983374],
+        	[1.20983374, 1.48599979]]
+        ),
+        'sigma_1': matrix(
+        	[[1.57352898, 1.20983373],
+        	[1.20983373, 1.48599977]]
+        ),
+        'lambda': 0.612194424069675,
+        'phi': 0.9998477583843295
+       }
+
+  	\end{verbatim}
+
+  	\begin{figure}[h!]
+  	\centering
+  	\includegraphics{starter/2Bii.png}
+  	\caption{Log-likelihood Geographical-aware mixture of gaussians model with three distinct initializations.}
+  	\label{fig:2Bv}
+  	\end{figure}
+
+  	\item We note that the parameters yielding the highest log-likelihood are not
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 \end{enumerate}
 
 \end{document}
